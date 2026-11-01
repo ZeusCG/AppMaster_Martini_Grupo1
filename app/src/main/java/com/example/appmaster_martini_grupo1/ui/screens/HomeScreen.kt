@@ -52,11 +52,3 @@ fun HomeScreen() {
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    AppMaster_Martini_Grupo1Theme {
-        HomeScreen()
-    }
-}
