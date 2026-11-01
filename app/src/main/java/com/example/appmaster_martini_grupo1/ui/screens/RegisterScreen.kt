@@ -1,5 +1,6 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +38,7 @@ import com.example.appmaster_martini_grupo1.viewmodel.AuthViewModel
 
 @Composable
 fun RegisterScreen(
-    viewModel: AuthViewModel = viewModel(),
+    viewModel: AuthViewModel = viewModel(factory = AuthViewModel.factory(LocalContext.current)),
     onNavigateBack: () -> Unit = {},
     onRegisterSuccess: () -> Unit = {}
 ) {

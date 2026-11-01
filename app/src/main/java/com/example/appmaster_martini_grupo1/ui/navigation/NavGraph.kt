@@ -167,7 +167,7 @@ private fun FavoritesPlaceholder(onBack: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Favoritos (En Desarrollo)")
+            Text("Aquí verás tus favoritos")
         }
     }
 }

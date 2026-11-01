@@ -64,23 +64,22 @@ import com.example.appmaster_martini_grupo1.ui.theme.MartiniGreenDark
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
 
-/** STATEful. NO se previsualiza. */
+
 @Composable
 fun ProfileScreen(
-    viewModel: ProfileViewModel = viewModel(),
+    viewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.factory(LocalContext.current)),
     userId: Long = 0L,
     onBack: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Mensaje de UI para el caso "permiso denegado".
+
     var galleryMessage by remember { mutableStateOf<String?>(null) }
 
-    // Carga la foto (content:// URI) a un bitmap para mostrarla.
     val photo = rememberBitmapFromUri(state.photoUri)
 
-    // Recurso nativo encapsulado: pide permiso y abre la galería.
+
     val pickImage = rememberGalleryLauncher { result ->
         when (result) {
             is GalleryResult.Picked -> {
