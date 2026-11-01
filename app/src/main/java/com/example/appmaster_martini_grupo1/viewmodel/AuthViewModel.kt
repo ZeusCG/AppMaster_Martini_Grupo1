@@ -1,4 +1,130 @@
 package com.example.appmaster_martini_grupo1.viewmodel
 
-class AuthViewModel {
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.appmaster_martini_grupo1.data.local.ProfileDao
+import com.example.appmaster_martini_grupo1.data.local.UserDao
+import com.example.appmaster_martini_grupo1.data.model.Profile
+import com.example.appmaster_martini_grupo1.data.model.User
+import com.example.appmaster_martini_grupo1.domain.Validators
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+data class AuthUiState(
+    val name: String = "",
+    val email: String = "",
+    val password: String = "",
+    val confirmPassword: String = "",
+    val phone: String = "",
+    val rut: String = "",
+    val nameError: String? = null,
+    val emailError: String? = null,
+    val passwordError: String? = null,
+    val confirmPasswordError: String? = null,
+    val phoneError: String? = null,
+    val rutError: String? = null,
+    val isLoading: Boolean = false,
+    val authError: String? = null,
+    val isLoggedIn: Boolean = false
+)
+
+class AuthViewModel(
+    private val userDao: UserDao? = null,
+    private val profileDao: ProfileDao? = null
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(AuthUiState())
+    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    fun onNameChange(value: String) = _uiState.update { it.copy(name = value, nameError = null) }
+    fun onEmailChange(value: String) = _uiState.update { it.copy(email = value, emailError = null) }
+    fun onPasswordChange(value: String) = _uiState.update { it.copy(password = value, passwordError = null) }
+    fun onConfirmPasswordChange(value: String) = _uiState.update { it.copy(confirmPassword = value, confirmPasswordError = null) }
+    fun onPhoneChange(value: String) = _uiState.update { it.copy(phone = value, phoneError = null) }
+    fun onRutChange(value: String) = _uiState.update { it.copy(rut = value, rutError = null) }
+    fun clearAuthError() = _uiState.update { it.copy(authError = null) }
+
+    private fun validateLogin(): Boolean {
+        val s = _uiState.value
+        val emailError = if (!Validators.isValidEmail(s.email)) "Ingresa un correo válido" else null
+        val passwordError = if (s.password.isBlank()) "Ingresa tu contraseña" else null
+        _uiState.update { it.copy(emailError = emailError, passwordError = passwordError) }
+        return emailError == null && passwordError == null
+    }
+
+    private fun validateRegister(): Boolean {
+        val s = _uiState.value
+        val nameError = if (s.name.trim().length < 2) "Ingresa tu nombre" else null
+        val emailError = if (!Validators.isValidEmail(s.email)) "Ingresa un correo válido" else null
+        val passwordError = if (!Validators.isValidPassword(s.password)) "Mínimo 6 caracteres" else null
+        val confirmError = if (s.confirmPassword != s.password) "Las contraseñas no coinciden" else null
+        val phoneError = if (s.phone.isNotBlank() && !Validators.isValidPhone(s.phone)) "Teléfono inválido" else null
+        val rutError = if (s.rut.isNotBlank() && !Validators.isValidRut(s.rut)) "RUT inválido" else null
+        _uiState.update {
+            it.copy(
+                nameError = nameError,
+                emailError = emailError,
+                passwordError = passwordError,
+                confirmPasswordError = confirmError,
+                phoneError = phoneError,
+                rutError = rutError
+            )
+        }
+        return listOf(nameError, emailError, passwordError, confirmError, phoneError, rutError).all { it == null }
+    }
+
+    fun onLoginClick() {
+        if (!validateLogin()) return
+        val dao = userDao ?: run {
+            _uiState.update { it.copy(authError = "Base de datos no inicializada (falta AppDatabase, ver §8 de 7B.1)") }
+            return
+        }
+        _uiState.update { it.copy(isLoading = true, authError = null) }
+        viewModelScope.launch {
+            val user = dao.authenticate(_uiState.value.email.trim(), _uiState.value.password)
+            _uiState.update {
+                if (user == null) it.copy(isLoading = false, authError = "Correo o contraseña incorrectos")
+                else it.copy(isLoading = false, isLoggedIn = true)
+            }
+        }
+    }
+
+    fun onRegisterClick() {
+        if (!validateRegister()) return
+        val userDaoRef = userDao
+        val profileDaoRef = profileDao
+        if (userDaoRef == null || profileDaoRef == null) {
+            _uiState.update { it.copy(authError = "Base de datos no inicializada (falta AppDatabase, ver §8 de 7B.1)") }
+            return
+        }
+        _uiState.update { it.copy(isLoading = true, authError = null) }
+        viewModelScope.launch {
+            try {
+                val s = _uiState.value
+                val newId = userDaoRef.insert(
+                    User(
+                        name = s.name.trim(),
+                        email = s.email.trim(),
+                        password = s.password,
+                        phone = s.phone.trim(),
+                        rut = s.rut.trim()
+                    )
+                )
+                profileDaoRef.upsert(
+                    Profile(
+                        userId = newId,
+                        displayName = s.name.trim(),
+                        email = s.email.trim(),
+                        phone = s.phone.trim()
+                    )
+                )
+                _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isLoading = false, authError = "No se pudo crear la cuenta (correo ya registrado)") }
+            }
+        }
+    }
 }
