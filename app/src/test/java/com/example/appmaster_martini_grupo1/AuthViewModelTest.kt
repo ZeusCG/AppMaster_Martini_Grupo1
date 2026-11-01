@@ -8,13 +8,13 @@ class AuthViewModelTest {
 
     @Test
     fun correoInvalidoMuestraErrorDeEmail() {
-        val vm = AuthViewModel()                 // sin DAO: solo probamos validación
+        val vm = AuthViewModel()
         vm.onEmailChange("no-es-correo")
         vm.onPasswordChange("Clave123")
         vm.onLoginClick()
 
-        assertNotNull(vm.uiState.value.emailError)   // el correo queda marcado con error
-        assertNull(vm.uiState.value.passwordError)   // la contraseña sí era válida
+        assertNotNull(vm.uiState.value.emailError)
+        assertNull(vm.uiState.value.passwordError)
     }
 
     @Test
