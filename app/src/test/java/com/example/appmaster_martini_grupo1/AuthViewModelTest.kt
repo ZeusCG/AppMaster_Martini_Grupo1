@@ -29,4 +29,29 @@ class AuthViewModelTest {
         assertNotNull(vm.uiState.value.confirmPasswordError)
         assertNull(vm.uiState.value.emailError)
     }
+
+    @Test
+    fun registroConPasswordDebilMarcaErrorDePassword() {
+        val vm = AuthViewModel()
+        vm.onNameChange("Ana")
+        vm.onEmailChange("ana@test.cl")
+        vm.onPasswordChange("123")
+        vm.onConfirmPasswordChange("123")
+        vm.onRegisterClick()
+
+        assertNotNull(vm.uiState.value.passwordError)
+    }
+
+    @Test
+    fun registroConRutInvalidoMarcaErrorDeRut() {
+        val vm = AuthViewModel()
+        vm.onNameChange("Ana")
+        vm.onEmailChange("ana@test.cl")
+        vm.onPasswordChange("Clave123")
+        vm.onConfirmPasswordChange("Clave123")
+        vm.onRutChange("12345678-4")
+        vm.onRegisterClick()
+
+        assertNotNull(vm.uiState.value.rutError)
+    }
 }
