@@ -1,4 +1,4 @@
-package com.example.appmaster_martini_grupo1.ui.theme
+package com.example.appmaster_martini_grupo1.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +58,7 @@ fun HomeScreen() {                                        // Punto de entrada de
 @Preview(showBackground = true)                           // Habilita el fondo por defecto en el preview de Android Studio
 @Composable                                               // También es UI, para poder previsualizarla
 fun HomeScreenPreview() {                                 // Función exclusiva del preview; no se ejecuta en la app real
-    AppMaster_Martini_Grupo1Theme {                       // Envuelve la pantalla con el tema (colores, tipografía)
+    _root_ide_package_.com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme {                       // Envuelve la pantalla con el tema (colores, tipografía)
         HomeScreen()                                      // Renderiza la pantalla dentro del tema
     }
 }
