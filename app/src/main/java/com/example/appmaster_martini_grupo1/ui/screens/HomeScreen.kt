@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -23,7 +24,11 @@ import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1The
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onGoCatalog: () -> Unit = {},
+    onGoFavorites: () -> Unit = {},
+    onGoProfile: () -> Unit = {}
+) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Master Martini") }) }
     ) { innerPadding ->
@@ -32,23 +37,35 @@ fun HomeScreen() {
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(text = "¡Bienvenido!")
-
-            Button(onClick = { /* acción futura */ }) {
-                Text("Presióname")
-            }
-
             Image(
                 painter = painterResource(id = R.drawable.logo),
-                // Accesibilidad: describe QUÉ es la imagen, no "imagen".
                 contentDescription = "Logotipo de Master Martini",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp),
+                    .height(120.dp),
                 contentScale = ContentScale.Fit
             )
+            Text("¡Bienvenido!", style = MaterialTheme.typography.headlineSmall)
+
+            Button(onClick = onGoCatalog, modifier = Modifier.fillMaxWidth()) {
+                Text("Ver catálogo")
+            }
+            Button(onClick = onGoFavorites, modifier = Modifier.fillMaxWidth()) {
+                Text("Mis favoritos")
+            }
+            Button(onClick = onGoProfile, modifier = Modifier.fillMaxWidth()) {
+                Text("Mi perfil")
+            }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    AppMaster_Martini_Grupo1Theme {
+        HomeScreen()
     }
 }

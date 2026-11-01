@@ -11,11 +11,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** Estado de la pantalla de perfil, con un error por campo y confirmaciones. */
 data class ProfileUiState(
     val userId: Long = 0L,
     val displayName: String = "",
     val email: String = "",
     val phone: String = "",
+    val photoUri: String? = null,              // foto de perfil (recurso nativo: galería)
     val selectedInterests: Set<String> = emptySet(),
     val displayNameError: String? = null,
     val emailError: String? = null,
@@ -41,6 +43,12 @@ class ProfileViewModel(
     fun onPhoneChange(value: String) =
         _uiState.update { it.copy(phone = value, phoneError = null, savedMessage = null) }
 
+    fun onPhotoPicked(uri: String) =
+        _uiState.update { it.copy(photoUri = uri, savedMessage = null) }
+
+    fun onPhotoRemoved() =
+        _uiState.update { it.copy(photoUri = null, savedMessage = null) }
+
     fun toggleInterest(id: String) = _uiState.update { state ->
         val nuevos = if (id in state.selectedInterests) {
             state.selectedInterests - id
@@ -60,6 +68,7 @@ class ProfileViewModel(
                     displayName = p.displayName,
                     email = p.email,
                     phone = p.phone,
+                    photoUri = p.photoUri,
                     selectedInterests = parseInterests(p.interestsCsv)
                 )
             }
@@ -81,7 +90,6 @@ class ProfileViewModel(
             _uiState.update { it.copy(error = "Base de datos no inicializada (falta AppDatabase, ver §8 de 7B.1)") }
             return
         }
-
         _uiState.update { it.copy(isSaving = true, savedMessage = null, error = null) }
         viewModelScope.launch {
             try {
@@ -92,13 +100,12 @@ class ProfileViewModel(
                         displayName = s.displayName.trim(),
                         email = s.email.trim(),
                         phone = s.phone.trim(),
+                        photoUri = s.photoUri,
                         interestsCsv = s.selectedInterests.joinToString(",")
                     )
                 )
-
                 _uiState.update { it.copy(isSaving = false, savedMessage = "Perfil guardado correctamente") }
             } catch (_: Exception) {
-
                 _uiState.update { it.copy(isSaving = false, error = "No se pudo guardar el perfil") }
             }
         }

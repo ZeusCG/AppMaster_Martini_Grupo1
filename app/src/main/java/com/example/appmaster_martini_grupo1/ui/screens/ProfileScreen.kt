@@ -5,6 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -28,27 +30,39 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmaster_martini_grupo1.data.model.defaultInterests
+import com.example.appmaster_martini_grupo1.platform.GalleryResult
+import com.example.appmaster_martini_grupo1.platform.openAppSettings
+import com.example.appmaster_martini_grupo1.platform.rememberBitmapFromUri
+import com.example.appmaster_martini_grupo1.platform.rememberGalleryLauncher
 import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.ui.components.InterestChips
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
 
-
+/** STATEful. NO se previsualiza. */
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel(),
@@ -56,6 +70,26 @@ fun ProfileScreen(
     onBack: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Mensaje de UI para el caso "permiso denegado".
+    var galleryMessage by remember { mutableStateOf<String?>(null) }
+
+    // Carga la foto (content:// URI) a un bitmap para mostrarla.
+    val photo = rememberBitmapFromUri(state.photoUri)
+
+    // Recurso nativo encapsulado: pide permiso y abre la galería.
+    val pickImage = rememberGalleryLauncher { result ->
+        when (result) {
+            is GalleryResult.Picked -> {
+                galleryMessage = null
+                viewModel.onPhotoPicked(result.uri)
+            }
+            GalleryResult.PermissionDenied ->
+                galleryMessage = "Sin permiso no se pueden leer imágenes. Actívalo en Ajustes."
+            GalleryResult.Cancelled -> Unit
+        }
+    }
 
     LaunchedEffect(userId) {
         viewModel.loadProfile(userId)
@@ -63,22 +97,33 @@ fun ProfileScreen(
 
     ProfileContent(
         state = state,
+        photo = photo,
+        galleryMessage = galleryMessage,
         onDisplayNameChange = viewModel::onDisplayNameChange,
         onEmailChange = viewModel::onEmailChange,
         onPhoneChange = viewModel::onPhoneChange,
         onToggleInterest = viewModel::toggleInterest,
+        onPickImage = pickImage,
+        onRemovePhoto = viewModel::onPhotoRemoved,
+        onOpenSettings = { openAppSettings(context) },
         onSaveClick = viewModel::saveProfile
     )
 }
 
+/** STATELESS: se previsualiza. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
     state: ProfileUiState,
+    photo: ImageBitmap?,
+    galleryMessage: String?,
     onDisplayNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPhoneChange: (String) -> Unit,
     onToggleInterest: (String) -> Unit,
+    onPickImage: () -> Unit,
+    onRemovePhoto: () -> Unit,
+    onOpenSettings: () -> Unit,
     onSaveClick: () -> Unit
 ) {
     Scaffold(
@@ -92,6 +137,42 @@ fun ProfileContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // --- RECURSO NATIVO: foto de perfil desde la galería ---
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (photo != null) {
+                    Image(
+                        bitmap = photo,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Sin foto de perfil",
+                        modifier = Modifier.size(88.dp)
+                    )
+                }
+                Column {
+                    Text("Foto de perfil", style = MaterialTheme.typography.titleMedium)
+                    TextButton(onClick = onPickImage) { Text("Elegir de la galería") }
+                    if (state.photoUri != null) {
+                        TextButton(onClick = onRemovePhoto) { Text("Quitar foto") }
+                    }
+                }
+            }
+
+            // Permiso denegado → aviso + acceso a Ajustes.
+            if (galleryMessage != null) {
+                Text(text = galleryMessage, color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = onOpenSettings) { Text("Abrir ajustes") }
+            }
+
             AuthTextField(
                 value = state.displayName,
                 onValueChange = onDisplayNameChange,
@@ -123,7 +204,6 @@ fun ProfileContent(
                 onToggle = onToggleInterest
             )
 
-            // Confirmación de ÉXITO animada
             AnimatedVisibility(
                 visible = state.savedMessage != null,
                 enter = fadeIn() + expandVertically(),
@@ -138,7 +218,6 @@ fun ProfileContent(
                 )
             }
 
-            // Confirmación de ERROR animada
             AnimatedVisibility(
                 visible = state.error != null,
                 enter = fadeIn() + expandVertically(),
@@ -196,41 +275,28 @@ private fun ConfirmBanner(
     }
 }
 
-@Preview(showBackground = true, name = "Perfil con éxito")
+@Preview(showBackground = true, name = "Perfil con foto")
 @Composable
-private fun ProfileContentSuccessPreview() {
+private fun ProfileContentPreview() {
     AppMaster_Martini_Grupo1Theme {
         ProfileContent(
             state = ProfileUiState(
                 displayName = "Ana Pérez",
                 email = "ana@test.cl",
                 phone = "+56912345678",
+                photoUri = "content://demo/foto.jpg",
                 selectedInterests = setOf("recetas", "panaderia"),
                 savedMessage = "Perfil guardado correctamente"
             ),
+            photo = null,
+            galleryMessage = null,
             onDisplayNameChange = {},
             onEmailChange = {},
             onPhoneChange = {},
             onToggleInterest = {},
-            onSaveClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Perfil con error")
-@Composable
-private fun ProfileContentErrorPreview() {
-    AppMaster_Martini_Grupo1Theme {
-        ProfileContent(
-            state = ProfileUiState(
-                displayName = "Ana Pérez",
-                email = "ana@test.cl",
-                error = "No se pudo guardar el perfil"
-            ),
-            onDisplayNameChange = {},
-            onEmailChange = {},
-            onPhoneChange = {},
-            onToggleInterest = {},
+            onPickImage = {},
+            onRemovePhoto = {},
+            onOpenSettings = {},
             onSaveClick = {}
         )
     }

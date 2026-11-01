@@ -2,32 +2,17 @@ package com.example.appmaster_martini_grupo1.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// --- Paleta Master Martini: alto contraste (RNF-02) ---
+// --- Paleta de marca Master Martini ---
+val MartiniGold = Color(0xFFC1A01D)         // Primary (dorado)
+val MartiniGreenDark = Color(0xFF0B4D43)    // Secondary (verde oscuro)
+val MartiniGreenAccent = Color(0xFF0B8E36)  // Accent verde
+val MartiniRed = Color(0xFFBE1522)          // Error / accent rojo
+val MartiniWhite = Color(0xFFFFFFFF)        // Background / Surface / On*
 
-// Esquema CLARO
-val MartiniPrimary = Color(0xFF8B1E1E)            // rojo vino profundo (contraste alto con blanco)
-val MartiniOnPrimary = Color(0xFFFFFFFF)
-val MartiniPrimaryContainer = Color(0xFFFFDAD6)
-val MartiniOnPrimaryContainer = Color(0xFF410002)
-val MartiniSecondary = Color(0xFF3E5C58)          // verde oscuro
-val MartiniOnSecondary = Color(0xFFFFFFFF)
-val MartiniBackground = Color(0xFFFFFBFF)         // casi blanco
-val MartiniOnBackground = Color(0xFF1A1C1C)       // casi negro
-val MartiniError = Color(0xFFBA1A1A)
-val MartiniOnError = Color(0xFFFFFFFF)
-val MartiniErrorContainer = Color(0xFFFFDAD6)
-val MartiniOnErrorContainer = Color(0xFF410002)
-
-// Esquema OSCURO
-val MartiniPrimaryDark = Color(0xFFFFB4AB)
-val MartiniOnPrimaryDark = Color(0xFF690005)
-val MartiniPrimaryContainerDark = Color(0xFF93000A)
-val MartiniOnPrimaryContainerDark = Color(0xFFFFDAD6)
-val MartiniSecondaryDark = Color(0xFFB1CCC8)
-val MartiniOnSecondaryDark = Color(0xFF0B1F1C)
-val MartiniBackgroundDark = Color(0xFF1A1C1C)
-val MartiniOnBackgroundDark = Color(0xFFE4E2E2)   // casi blanco
-val MartiniErrorDark = Color(0xFFFFB4AB)
-val MartiniOnErrorDark = Color(0xFF690005)
-val MartiniErrorContainerDark = Color(0xFF93000A)
-val MartiniOnErrorContainerDark = Color(0xFFFFDAD6)
+// --- Derivados para contenedores y texto secundario ---
+val MartiniGoldLight = Color(0xFFF4E9BE)     // contenedor dorado claro
+val MartiniGoldDark = Color(0xFF4A3B00)      // texto sobre dorado claro
+val MartiniGreenLight = Color(0xFFB9D9D1)    // contenedor verde claro
+val MartiniSurfaceVariant = Color(0xFFEFE9DA)
+val MartiniOnSurfaceVariant = Color(0xFF4A4A3A)
+val MartiniOutline = Color(0xFF7A7568)
