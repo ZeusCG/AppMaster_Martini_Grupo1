@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -59,6 +60,7 @@ import com.example.appmaster_martini_grupo1.platform.rememberGalleryLauncher
 import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.ui.components.InterestChips
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
+import com.example.appmaster_martini_grupo1.ui.theme.MartiniGreenDark
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
 
@@ -106,11 +108,11 @@ fun ProfileScreen(
         onPickImage = pickImage,
         onRemovePhoto = viewModel::onPhotoRemoved,
         onOpenSettings = { openAppSettings(context) },
-        onSaveClick = viewModel::saveProfile
+        onSaveClick = viewModel::saveProfile,
+        onBack = onBack
     )
 }
 
-/** STATELESS: se previsualiza. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
@@ -124,10 +126,16 @@ fun ProfileContent(
     onPickImage: () -> Unit,
     onRemovePhoto: () -> Unit,
     onOpenSettings: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    onBack: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Mi perfil") }) }
+        topBar = { TopAppBar(title = { Text("Mi perfil") },
+            navigationIcon = {
+                TextButton(
+                    onClick = onBack,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MartiniGreenDark)) { Text("<")}
+            }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -137,7 +145,7 @@ fun ProfileContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // --- RECURSO NATIVO: foto de perfil desde la galería ---
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -167,7 +175,6 @@ fun ProfileContent(
                 }
             }
 
-            // Permiso denegado → aviso + acceso a Ajustes.
             if (galleryMessage != null) {
                 Text(text = galleryMessage, color = MaterialTheme.colorScheme.error)
                 TextButton(onClick = onOpenSettings) { Text("Abrir ajustes") }

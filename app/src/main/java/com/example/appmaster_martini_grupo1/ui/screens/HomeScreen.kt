@@ -1,5 +1,6 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,7 +38,8 @@ fun HomeScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
