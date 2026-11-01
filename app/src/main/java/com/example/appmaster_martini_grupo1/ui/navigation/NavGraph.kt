@@ -28,7 +28,6 @@ import com.example.appmaster_martini_grupo1.ui.screens.LoginScreen
 import com.example.appmaster_martini_grupo1.ui.screens.ProfileScreen
 import com.example.appmaster_martini_grupo1.ui.screens.RegisterScreen
 
-/** Rutas congeladas (contrato, sección 4). NO renombrar. */
 object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
@@ -38,7 +37,6 @@ object Routes {
     const val FAVORITES = "favorites"
     const val DETAIL = "detail/{id}"
 
-    /** Arma la ruta del detalle con un id concreto. */
     fun detail(id: String) = "detail/$id"
 }
 
@@ -51,9 +49,8 @@ fun AppNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN,
+        startDestination = Routes.HOME,
         modifier = modifier,
-        // Avanzar: la pantalla nueva entra desde la derecha; la actual sale hacia la izquierda.
         enterTransition = {
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.Left,
@@ -66,7 +63,7 @@ fun AppNavGraph(
                 tween(ANIM_MS)
             ) + fadeOut(tween(ANIM_MS))
         },
-        // Volver (pop): al revés.
+
         popEnterTransition = {
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.Right,
@@ -85,7 +82,6 @@ fun AppNavGraph(
                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
                 onLoginSuccess = {
                     navController.navigate(Routes.HOME) {
-                        // Saca el login del back stack para que "Atrás" no vuelva a él.
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
@@ -112,16 +108,17 @@ fun AppNavGraph(
         }
 
         composable(Routes.PROFILE) {
-            ProfileScreen(onBack = { navController.popBackStack() })
+            ProfileScreen(
+                onBack = { navController.popBackStack() })
         }
 
         composable(Routes.CATALOG) {
             CatalogScreen(
-                onItemClick = { id -> navController.navigate(Routes.detail(id)) }
+                onItemClick = { id -> navController.navigate(Routes.detail(id)) },
+                onBack = { navController.popBackStack() }
             )
         }
 
-        // El detalle tiene SU propia transición: sube desde abajo (como "abrir un ítem").
         composable(
             route = Routes.DETAIL,
             enterTransition = {
@@ -144,11 +141,10 @@ fun AppNavGraph(
             )
         }
 
-        // Ruta congelada 'favorites': su pantalla aún no existe (paso 8A.3, Pista A).
-        // Placeholder temporal (vive aquí para no tocar FavoritesScreen.kt de Sebastian).
         composable(Routes.FAVORITES) {
             FavoritesPlaceholder(onBack = { navController.popBackStack() })
         }
+
     }
 }
 
@@ -171,7 +167,7 @@ private fun FavoritesPlaceholder(onBack: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Favoritos (pendiente: paso 8A.3, Pista A)")
+            Text("Aquí verás tus favoritos")
         }
     }
 }

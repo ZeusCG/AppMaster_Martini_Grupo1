@@ -1,7 +1,12 @@
 package com.example.appmaster_martini_grupo1.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.appmaster_martini_grupo1.data.local.AppDatabase
 import com.example.appmaster_martini_grupo1.data.local.ProfileDao
 import com.example.appmaster_martini_grupo1.data.local.UserDao
 import com.example.appmaster_martini_grupo1.data.model.Profile
@@ -59,7 +64,7 @@ class AuthViewModel(
         val s = _uiState.value
         val nameError = if (s.name.trim().length < 2) "Ingresa tu nombre" else null
         val emailError = if (!Validators.isValidEmail(s.email)) "Ingresa un correo válido" else null
-        val passwordError = if (!Validators.isValidPassword(s.password)) "Mínimo 6 caracteres" else null
+        val passwordError = if (!Validators.isValidPassword(s.password)) "Mínimo 8 caracteres, con letra y número" else null
         val confirmError = if (s.confirmPassword != s.password) "Las contraseñas no coinciden" else null
         val phoneError = if (s.phone.isNotBlank() && !Validators.isValidPhone(s.phone)) "Teléfono inválido" else null
         val rutError = if (s.rut.isNotBlank() && !Validators.isValidRut(s.rut)) "RUT inválido" else null
@@ -78,8 +83,9 @@ class AuthViewModel(
 
     fun onLoginClick() {
         if (!validateLogin()) return
-        val dao = userDao ?: run {
-            _uiState.update { it.copy(authError = "Base de datos no inicializada (falta AppDatabase, ver §8 de 7B.1)") }
+        val dao = userDao
+        if (dao == null) {
+            _uiState.update { it.copy(authError = "No se pudo conectar con el almacenamiento local. Intenta nuevamente.") }
             return
         }
         _uiState.update { it.copy(isLoading = true, authError = null) }
@@ -97,7 +103,7 @@ class AuthViewModel(
         val userDaoRef = userDao
         val profileDaoRef = profileDao
         if (userDaoRef == null || profileDaoRef == null) {
-            _uiState.update { it.copy(authError = "Base de datos no inicializada (falta AppDatabase, ver §8 de 7B.1)") }
+            _uiState.update { it.copy(authError = "No se pudo conectar con el almacenamiento local. Intenta nuevamente.") }
             return
         }
         _uiState.update { it.copy(isLoading = true, authError = null) }
@@ -123,7 +129,17 @@ class AuthViewModel(
                 )
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
             } catch (_: Exception) {
-                _uiState.update { it.copy(isLoading = false, authError = "No se pudo crear la cuenta (correo ya registrado)") }
+                _uiState.update { it.copy(isLoading = false, authError = "No se pudo crear la cuenta. Revisa los datos e intenta nuevamente.") }
+            }
+        }
+    }
+
+    companion object {
+        /** Inyecta los DAOs reales desde AppDatabase (Room). */
+        fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val db = AppDatabase.getInstance(context.applicationContext)
+                AuthViewModel(userDao = db.userDao(), profileDao = db.profileDao())
             }
         }
     }

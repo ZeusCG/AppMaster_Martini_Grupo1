@@ -1,5 +1,6 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -37,7 +38,7 @@ import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
 
 @Composable
 fun InterestsSurveyScreen(
-    viewModel: ProfileViewModel = viewModel(),
+    viewModel: ProfileViewModel = viewModel(factory = ProfileViewModel.factory(LocalContext.current)),
     userId: Long = 0L,
     onDone: () -> Unit = {}
 ) {

@@ -1,7 +1,12 @@
 package com.example.appmaster_martini_grupo1.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.appmaster_martini_grupo1.data.local.AppDatabase
 import com.example.appmaster_martini_grupo1.data.local.ProfileDao
 import com.example.appmaster_martini_grupo1.data.model.Profile
 import com.example.appmaster_martini_grupo1.domain.Validators
@@ -86,8 +91,9 @@ class ProfileViewModel(
 
     fun saveProfile() {
         if (!validate()) return
-        val dao = profileDao ?: run {
-            _uiState.update { it.copy(error = "Base de datos no inicializada (falta AppDatabase, ver §8 de 7B.1)") }
+        val dao = profileDao
+        if (dao == null) {
+            _uiState.update { it.copy(error = "No se pudo conectar con el almacenamiento local. Intenta nuevamente.") }
             return
         }
         _uiState.update { it.copy(isSaving = true, savedMessage = null, error = null) }
@@ -106,11 +112,21 @@ class ProfileViewModel(
                 )
                 _uiState.update { it.copy(isSaving = false, savedMessage = "Perfil guardado correctamente") }
             } catch (_: Exception) {
-                _uiState.update { it.copy(isSaving = false, error = "No se pudo guardar el perfil") }
+                _uiState.update { it.copy(isSaving = false, error = "No se pudo guardar el perfil. Intenta nuevamente.") }
             }
         }
     }
 
     private fun parseInterests(csv: String): Set<String> =
         csv.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+
+    companion object {
+        /** Inyecta el DAO real desde AppDatabase (Room). */
+        fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val db = AppDatabase.getInstance(context.applicationContext)
+                ProfileViewModel(profileDao = db.profileDao())
+            }
+        }
+    }
 }

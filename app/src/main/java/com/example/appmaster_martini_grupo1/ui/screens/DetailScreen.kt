@@ -70,7 +70,7 @@ fun DetailScreen(
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSecondary
                         )
-                    ) { Text("Volver") }
+                    ) { Text("<") }
                 },
                 actions = {
                     val isFavorite = contentId in favoriteIds
