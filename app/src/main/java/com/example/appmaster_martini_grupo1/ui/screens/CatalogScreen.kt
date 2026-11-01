@@ -1,5 +1,9 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -19,16 +23,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmaster_martini_grupo1.ui.components.ContentCard
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,17 +119,42 @@ fun CatalogScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(content, key = { it.id }) { item ->
-                        ContentCard(
-                            content = item,
-                            onClick = { onItemClick(item.id) },
-                            isFavorite = item.id in favoriteIds,
-                            onToggleFavorite = { viewModel.toggleFavorite(item.id) }
-                        )
+                    itemsIndexed(content, key = { _, item -> item.id }) { index, item ->
+                        AnimatedCatalogItem(
+                            index = index,
+                            modifier = Modifier.animateItem()
+                        ) {
+                            ContentCard(
+                                content = item,
+                                onClick = { onItemClick(item.id) },
+                                isFavorite = item.id in favoriteIds,
+                                onToggleFavorite = { viewModel.toggleFavorite(item.id) }
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+}
+@Composable
+private fun AnimatedCatalogItem(
+    index: Int,
+    modifier: Modifier = Modifier,
+    card: @Composable () -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        // Retardo corto según la posición (tope 8) para el efecto "en cascada".
+        delay((index.coerceAtMost(8) * 45).toLong())
+        visible = true
+    }
+    AnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
+        enter = fadeIn(tween(300)) + slideInVertically(tween(300)) { it / 6 }
+    ) {
+        card()
     }
 }
 
