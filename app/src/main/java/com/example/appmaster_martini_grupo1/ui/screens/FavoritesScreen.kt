@@ -51,7 +51,7 @@ fun FavoritesScreen(
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSecondary
                         )
-                    ) { Text("Volver") }
+                    ) { Text("<") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,

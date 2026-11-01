@@ -11,6 +11,7 @@ import com.example.appmaster_martini_grupo1.data.local.ProfileDao
 import com.example.appmaster_martini_grupo1.data.local.UserDao
 import com.example.appmaster_martini_grupo1.data.model.Profile
 import com.example.appmaster_martini_grupo1.data.model.User
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.domain.Validators
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,7 +34,8 @@ data class AuthUiState(
     val rutError: String? = null,
     val isLoading: Boolean = false,
     val authError: String? = null,
-    val isLoggedIn: Boolean = false
+    val isLoggedIn: Boolean = false,
+    val userId: Long? = null
 )
 
 class AuthViewModel(
@@ -42,7 +44,7 @@ class AuthViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
-    val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+        val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     fun onNameChange(value: String) = _uiState.update { it.copy(name = value, nameError = null) }
     fun onEmailChange(value: String) = _uiState.update { it.copy(email = value, emailError = null) }
@@ -91,9 +93,11 @@ class AuthViewModel(
         _uiState.update { it.copy(isLoading = true, authError = null) }
         viewModelScope.launch {
             val user = dao.authenticate(_uiState.value.email.trim(), _uiState.value.password)
-            _uiState.update {
-                if (user == null) it.copy(isLoading = false, authError = "Correo o contraseña incorrectos")
-                else it.copy(isLoading = false, isLoggedIn = true)
+            if (user == null) {
+                _uiState.update { it.copy(isLoading = false, authError = "Correo o contraseña incorrectos") }
+            } else {
+                UserSession.set(user.id)
+                _uiState.update { it.copy(isLoading = false, isLoggedIn = true, userId = user.id) }
             }
         }
     }
@@ -124,10 +128,11 @@ class AuthViewModel(
                         userId = newId,
                         displayName = s.name.trim(),
                         email = s.email.trim(),
-                        phone = s.phone.trim()
+                        phone = s.phone.trim(),
                     )
                 )
-                _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
+                UserSession.set(newId)
+                _uiState.update { it.copy(isLoading = false, isLoggedIn = true, userId = newId) }
             } catch (_: Exception) {
                 _uiState.update { it.copy(isLoading = false, authError = "No se pudo crear la cuenta. Revisa los datos e intenta nuevamente.") }
             }
@@ -135,7 +140,6 @@ class AuthViewModel(
     }
 
     companion object {
-        /** Inyecta los DAOs reales desde AppDatabase (Room). */
         fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val db = AppDatabase.getInstance(context.applicationContext)

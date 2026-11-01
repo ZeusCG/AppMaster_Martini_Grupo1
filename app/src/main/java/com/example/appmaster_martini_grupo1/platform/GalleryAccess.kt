@@ -20,7 +20,6 @@ import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Permiso que Android pide para leer imágenes (cambia según la versión). */
 val imageReadPermission: String =
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_IMAGES
@@ -28,7 +27,6 @@ val imageReadPermission: String =
         Manifest.permission.READ_EXTERNAL_STORAGE
     }
 
-/** Resultado de intentar elegir una imagen de la galería. */
 sealed interface GalleryResult {
     data class Picked(val uri: String) : GalleryResult
     data object PermissionDenied : GalleryResult
