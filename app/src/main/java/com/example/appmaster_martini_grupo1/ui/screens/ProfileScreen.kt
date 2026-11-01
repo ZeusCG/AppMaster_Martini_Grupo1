@@ -1,5 +1,10 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,6 +47,7 @@ import com.example.appmaster_martini_grupo1.ui.components.InterestChips
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
+
 
 @Composable
 fun ProfileScreen(
@@ -117,9 +123,14 @@ fun ProfileContent(
                 onToggle = onToggleInterest
             )
 
-            state.savedMessage?.let { msg ->
+            // Confirmación de ÉXITO animada
+            AnimatedVisibility(
+                visible = state.savedMessage != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
                 ConfirmBanner(
-                    message = msg,
+                    message = state.savedMessage.orEmpty(),
                     icon = Icons.Filled.CheckCircle,
                     iconContentDescription = "Guardado correctamente",
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -127,9 +138,14 @@ fun ProfileContent(
                 )
             }
 
-            state.error?.let { msg ->
+            // Confirmación de ERROR animada
+            AnimatedVisibility(
+                visible = state.error != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
                 ConfirmBanner(
-                    message = msg,
+                    message = state.error.orEmpty(),
                     icon = Icons.Filled.Warning,
                     iconContentDescription = "Error",
                     containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -154,7 +170,6 @@ fun ProfileContent(
         }
     }
 }
-
 
 @Composable
 private fun ConfirmBanner(
