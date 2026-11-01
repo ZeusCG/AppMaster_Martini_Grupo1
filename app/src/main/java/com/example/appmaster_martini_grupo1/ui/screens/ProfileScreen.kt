@@ -28,12 +28,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmaster_martini_grupo1.data.model.defaultInterests
 import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
+import com.example.appmaster_martini_grupo1.ui.components.InterestChips
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
 
-/** STATEful. NO se previsualiza. */
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel(),
@@ -51,12 +52,12 @@ fun ProfileScreen(
         onDisplayNameChange = viewModel::onDisplayNameChange,
         onEmailChange = viewModel::onEmailChange,
         onPhoneChange = viewModel::onPhoneChange,
-        onInterestsChange = viewModel::onInterestsChange,
+        onToggleInterest = viewModel::toggleInterest,
         onSaveClick = viewModel::saveProfile
     )
 }
 
-/** STATELESS: se previsualiza. */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
@@ -64,7 +65,7 @@ fun ProfileContent(
     onDisplayNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPhoneChange: (String) -> Unit,
-    onInterestsChange: (String) -> Unit,
+    onToggleInterest: (String) -> Unit,
     onSaveClick: () -> Unit
 ) {
     Scaffold(
@@ -101,10 +102,12 @@ fun ProfileContent(
                 icon = Icons.Filled.Phone,
                 keyboardType = KeyboardType.Phone
             )
-            AuthTextField(
-                value = state.interests,
-                onValueChange = onInterestsChange,
-                label = "Intereses (separados por coma)"
+
+            Text("Mis intereses", style = MaterialTheme.typography.titleMedium)
+            InterestChips(
+                interests = defaultInterests,
+                selectedIds = state.selectedInterests,
+                onToggle = onToggleInterest
             )
 
             state.savedMessage?.let { msg ->
@@ -129,7 +132,7 @@ fun ProfileContent(
     }
 }
 
-@Preview(showBackground = true, name = "Perfil con datos")
+@Preview(showBackground = true, name = "Perfil con intereses")
 @Composable
 private fun ProfileContentPreview() {
     AppMaster_Martini_Grupo1Theme {
@@ -138,12 +141,12 @@ private fun ProfileContentPreview() {
                 displayName = "Ana Pérez",
                 email = "ana@test.cl",
                 phone = "+56912345678",
-                interests = "Repostería, Panadería"
+                selectedInterests = setOf("recetas", "panaderia")
             ),
             onDisplayNameChange = {},
             onEmailChange = {},
             onPhoneChange = {},
-            onInterestsChange = {},
+            onToggleInterest = {},
             onSaveClick = {}
         )
     }

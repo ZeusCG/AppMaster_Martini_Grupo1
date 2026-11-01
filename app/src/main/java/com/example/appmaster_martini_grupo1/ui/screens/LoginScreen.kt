@@ -33,7 +33,6 @@ import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1The
 import com.example.appmaster_martini_grupo1.viewmodel.AuthUiState
 import com.example.appmaster_martini_grupo1.viewmodel.AuthViewModel
 
-/** STATEful: obtiene el ViewModel y lee el estado. NO se previsualiza. */
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = viewModel(),
@@ -55,7 +54,6 @@ fun LoginScreen(
     )
 }
 
-/** STATELESS: solo dibuja. Este SÍ se puede previsualizar. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginContent(

@@ -16,7 +16,7 @@ data class ProfileUiState(
     val displayName: String = "",
     val email: String = "",
     val phone: String = "",
-    val interests: String = "",
+    val selectedInterests: Set<String> = emptySet(),
     val displayNameError: String? = null,
     val emailError: String? = null,
     val phoneError: String? = null,
@@ -35,7 +35,15 @@ class ProfileViewModel(
     fun onDisplayNameChange(value: String) = _uiState.update { it.copy(displayName = value, displayNameError = null) }
     fun onEmailChange(value: String) = _uiState.update { it.copy(email = value, emailError = null) }
     fun onPhoneChange(value: String) = _uiState.update { it.copy(phone = value, phoneError = null) }
-    fun onInterestsChange(value: String) = _uiState.update { it.copy(interests = value) }
+
+    fun toggleInterest(id: String) = _uiState.update { state ->
+        val nuevos = if (id in state.selectedInterests) {
+            state.selectedInterests - id
+        } else {
+            state.selectedInterests + id
+        }
+        state.copy(selectedInterests = nuevos)
+    }
 
     fun loadProfile(userId: Long) {
         _uiState.update { it.copy(userId = userId) }
@@ -47,12 +55,11 @@ class ProfileViewModel(
                     displayName = p.displayName,
                     email = p.email,
                     phone = p.phone,
-                    interests = p.interestsCsv
+                    selectedInterests = parseInterests(p.interestsCsv)
                 )
             }
         }
     }
-
 
     private fun validate(): Boolean {
         val s = _uiState.value
@@ -79,7 +86,7 @@ class ProfileViewModel(
                         displayName = s.displayName.trim(),
                         email = s.email.trim(),
                         phone = s.phone.trim(),
-                        interestsCsv = s.interests
+                        interestsCsv = s.selectedInterests.joinToString(",")
                     )
                 )
                 _uiState.update { it.copy(isSaving = false, savedMessage = "Perfil guardado") }
@@ -88,4 +95,7 @@ class ProfileViewModel(
             }
         }
     }
+
+    private fun parseInterests(csv: String): Set<String> =
+        csv.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
 }
