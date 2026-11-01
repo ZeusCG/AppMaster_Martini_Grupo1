@@ -1,5 +1,7 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import kotlinx.coroutines.delay
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -33,6 +35,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,7 +63,6 @@ import com.example.appmaster_martini_grupo1.platform.rememberGalleryLauncher
 import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.ui.components.InterestChips
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
-import com.example.appmaster_martini_grupo1.ui.theme.MartiniGreenDark
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
 
@@ -74,11 +76,9 @@ fun ProfileScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-
     var galleryMessage by remember { mutableStateOf<String?>(null) }
 
     val photo = rememberBitmapFromUri(state.photoUri)
-
 
     val pickImage = rememberGalleryLauncher { result ->
         when (result) {
@@ -89,11 +89,22 @@ fun ProfileScreen(
             GalleryResult.PermissionDenied ->
                 galleryMessage = "Sin permiso no se pueden leer imágenes. Actívalo en Ajustes."
             GalleryResult.Cancelled -> Unit
+
         }
     }
 
-    LaunchedEffect(userId) {
-        viewModel.loadProfile(userId)
+    val sessionId by UserSession.userId.collectAsStateWithLifecycle()
+    val effectiveId = sessionId ?: userId
+
+    LaunchedEffect(effectiveId) {
+        viewModel.loadProfile(effectiveId)
+    }
+
+    LaunchedEffect(state.savedMessage) {
+        if (state.savedMessage != null) {
+            delay(1000)
+            onBack()
+        }
     }
 
     ProfileContent(
@@ -129,12 +140,21 @@ fun ProfileContent(
     onBack: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Mi perfil") },
-            navigationIcon = {
-                TextButton(
-                    onClick = onBack,
-                    colors = ButtonDefaults.textButtonColors(contentColor = MartiniGreenDark)) { Text("<")}
-            }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Mi perfil") },
+                navigationIcon = {
+                    TextButton(
+                        onClick = onBack,
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("<") }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSecondary
+                )
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier

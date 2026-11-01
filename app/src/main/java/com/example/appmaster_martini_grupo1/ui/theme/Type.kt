@@ -6,7 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Tipografía pensada para usuarios 50+ (RNF-01): textos más grandes y más aire entre líneas.
 val Typography = Typography(
     headlineSmall = TextStyle(
         fontFamily = FontFamily.Default,

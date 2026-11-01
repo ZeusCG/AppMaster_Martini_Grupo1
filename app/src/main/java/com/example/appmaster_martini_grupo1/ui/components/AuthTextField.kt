@@ -47,7 +47,6 @@ fun AuthTextField(
         leadingIcon = if (icon != null) {
             { Icon(icon, contentDescription = iconContentDescription) }
         } else null,
-        // ANIMACIÓN: el mensaje de error se expande/contrae con fade en vez de aparecer de golpe.
         supportingText = {
             AnimatedVisibility(
                 visible = error != null,

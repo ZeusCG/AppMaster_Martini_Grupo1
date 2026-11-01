@@ -10,19 +10,19 @@ import com.example.appmaster_martini_grupo1.data.local.AppDatabase
 import com.example.appmaster_martini_grupo1.data.local.ProfileDao
 import com.example.appmaster_martini_grupo1.data.model.Profile
 import com.example.appmaster_martini_grupo1.domain.Validators
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** Estado de la pantalla de perfil, con un error por campo y confirmaciones. */
 data class ProfileUiState(
     val userId: Long = 0L,
     val displayName: String = "",
     val email: String = "",
     val phone: String = "",
-    val photoUri: String? = null,              // foto de perfil (recurso nativo: galería)
+    val photoUri: String? = null,
     val selectedInterests: Set<String> = emptySet(),
     val displayNameError: String? = null,
     val emailError: String? = null,
@@ -121,7 +121,6 @@ class ProfileViewModel(
         csv.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
 
     companion object {
-        /** Inyecta el DAO real desde AppDatabase (Room). */
         fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val db = AppDatabase.getInstance(context.applicationContext)

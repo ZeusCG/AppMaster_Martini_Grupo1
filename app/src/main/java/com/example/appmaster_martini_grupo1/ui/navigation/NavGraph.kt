@@ -1,5 +1,6 @@
 package com.example.appmaster_martini_grupo1.ui.navigation
 
+import com.example.appmaster_martini_grupo1.ui.screens.FavoritesScreen
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -142,7 +143,10 @@ fun AppNavGraph(
         }
 
         composable(Routes.FAVORITES) {
-            FavoritesPlaceholder(onBack = { navController.popBackStack() })
+            FavoritesScreen(
+                onItemClick = { id -> navController.navigate(Routes.detail(id)) },
+                onBack = { navController.popBackStack() }
+            )
         }
 
     }

@@ -1,10 +1,12 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -23,12 +25,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmaster_martini_grupo1.R
 import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
 import com.example.appmaster_martini_grupo1.viewmodel.AuthUiState
@@ -65,7 +71,7 @@ fun LoginContent(
     onNavigateToRegister: () -> Unit
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Iniciar sesión") }) }
+        topBar = { TopAppBar(title = { Text("") }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -73,9 +79,19 @@ fun LoginContent(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Master Martini", style = MaterialTheme.typography.headlineSmall)
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logotipo de Master Martini",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Text("Iniciar sesión", style = MaterialTheme.typography.headlineSmall)
 
             AuthTextField(
                 value = state.email,
