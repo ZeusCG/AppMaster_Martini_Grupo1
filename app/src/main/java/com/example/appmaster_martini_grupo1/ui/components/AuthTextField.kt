@@ -25,6 +25,7 @@ fun AuthTextField(
     modifier: Modifier = Modifier,
     error: String? = null,
     icon: ImageVector? = null,
+    iconContentDescription: String? = null,
     isPassword: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
@@ -37,7 +38,9 @@ fun AuthTextField(
         modifier = modifier.fillMaxWidth(),
         isError = error != null,
         singleLine = true,
-        leadingIcon = if (icon != null) { { Icon(icon, contentDescription = null) } } else null,
+        leadingIcon = if (icon != null) {
+            { Icon(icon, contentDescription = iconContentDescription) }
+        } else null,
         supportingText = if (error != null) { { Text(error) } } else null,
         visualTransformation =
             if (isPassword && !visible) PasswordVisualTransformation() else VisualTransformation.None,

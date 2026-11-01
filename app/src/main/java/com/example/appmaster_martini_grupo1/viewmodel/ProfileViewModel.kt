@@ -32,9 +32,14 @@ class ProfileViewModel(
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    fun onDisplayNameChange(value: String) = _uiState.update { it.copy(displayName = value, displayNameError = null) }
-    fun onEmailChange(value: String) = _uiState.update { it.copy(email = value, emailError = null) }
-    fun onPhoneChange(value: String) = _uiState.update { it.copy(phone = value, phoneError = null) }
+    fun onDisplayNameChange(value: String) =
+        _uiState.update { it.copy(displayName = value, displayNameError = null, savedMessage = null) }
+
+    fun onEmailChange(value: String) =
+        _uiState.update { it.copy(email = value, emailError = null, savedMessage = null) }
+
+    fun onPhoneChange(value: String) =
+        _uiState.update { it.copy(phone = value, phoneError = null, savedMessage = null) }
 
     fun toggleInterest(id: String) = _uiState.update { state ->
         val nuevos = if (id in state.selectedInterests) {
@@ -42,7 +47,7 @@ class ProfileViewModel(
         } else {
             state.selectedInterests + id
         }
-        state.copy(selectedInterests = nuevos)
+        state.copy(selectedInterests = nuevos, savedMessage = null)
     }
 
     fun loadProfile(userId: Long) {
@@ -76,6 +81,7 @@ class ProfileViewModel(
             _uiState.update { it.copy(error = "Base de datos no inicializada (falta AppDatabase, ver §8 de 7B.1)") }
             return
         }
+
         _uiState.update { it.copy(isSaving = true, savedMessage = null, error = null) }
         viewModelScope.launch {
             try {
@@ -89,8 +95,10 @@ class ProfileViewModel(
                         interestsCsv = s.selectedInterests.joinToString(",")
                     )
                 )
-                _uiState.update { it.copy(isSaving = false, savedMessage = "Perfil guardado") }
+
+                _uiState.update { it.copy(isSaving = false, savedMessage = "Perfil guardado correctamente") }
             } catch (_: Exception) {
+
                 _uiState.update { it.copy(isSaving = false, error = "No se pudo guardar el perfil") }
             }
         }

@@ -1,6 +1,5 @@
 package com.example.appmaster_martini_grupo1.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,32 +11,44 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = MartiniPrimaryDark,
+    onPrimary = MartiniOnPrimaryDark,
+    primaryContainer = MartiniPrimaryContainerDark,
+    onPrimaryContainer = MartiniOnPrimaryContainerDark,
+    secondary = MartiniSecondaryDark,
+    onSecondary = MartiniOnSecondaryDark,
+    background = MartiniBackgroundDark,
+    onBackground = MartiniOnBackgroundDark,
+    surface = MartiniBackgroundDark,
+    onSurface = MartiniOnBackgroundDark,
+    error = MartiniErrorDark,
+    onError = MartiniOnErrorDark,
+    errorContainer = MartiniErrorContainerDark,
+    onErrorContainer = MartiniOnErrorContainerDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = MartiniPrimary,
+    onPrimary = MartiniOnPrimary,
+    primaryContainer = MartiniPrimaryContainer,
+    onPrimaryContainer = MartiniOnPrimaryContainer,
+    secondary = MartiniSecondary,
+    onSecondary = MartiniOnSecondary,
+    background = MartiniBackground,
+    onBackground = MartiniOnBackground,
+    surface = MartiniBackground,
+    onSurface = MartiniOnBackground,
+    error = MartiniError,
+    onError = MartiniOnError,
+    errorContainer = MartiniErrorContainer,
+    onErrorContainer = MartiniOnErrorContainer
 )
 
 @Composable
 fun AppMaster_Martini_Grupo1Theme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color se deja APAGADO por defecto para conservar el contraste de la marca (RNF-02).
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
