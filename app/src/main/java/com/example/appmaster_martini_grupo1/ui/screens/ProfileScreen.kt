@@ -2,6 +2,7 @@ package com.example.appmaster_martini_grupo1.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,20 +10,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,7 +64,6 @@ fun ProfileScreen(
         onSaveClick = viewModel::saveProfile
     )
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,10 +118,23 @@ fun ProfileContent(
             )
 
             state.savedMessage?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.primary)
+                ConfirmBanner(
+                    message = msg,
+                    icon = Icons.Filled.CheckCircle,
+                    iconContentDescription = "Guardado correctamente",
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
+
             state.error?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
+                ConfirmBanner(
+                    message = msg,
+                    icon = Icons.Filled.Warning,
+                    iconContentDescription = "Error",
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
             }
 
             Button(
@@ -123,7 +143,10 @@ fun ProfileContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (state.isSaving) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 } else {
                     Text("Guardar cambios")
                 }
@@ -132,16 +155,62 @@ fun ProfileContent(
     }
 }
 
-@Preview(showBackground = true, name = "Perfil con intereses")
+
 @Composable
-private fun ProfileContentPreview() {
+private fun ConfirmBanner(
+    message: String,
+    icon: ImageVector,
+    iconContentDescription: String,
+    containerColor: Color,
+    contentColor: Color
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = containerColor,
+        contentColor = contentColor
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(imageVector = icon, contentDescription = iconContentDescription)
+            Text(text = message, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Perfil con éxito")
+@Composable
+private fun ProfileContentSuccessPreview() {
     AppMaster_Martini_Grupo1Theme {
         ProfileContent(
             state = ProfileUiState(
                 displayName = "Ana Pérez",
                 email = "ana@test.cl",
                 phone = "+56912345678",
-                selectedInterests = setOf("recetas", "panaderia")
+                selectedInterests = setOf("recetas", "panaderia"),
+                savedMessage = "Perfil guardado correctamente"
+            ),
+            onDisplayNameChange = {},
+            onEmailChange = {},
+            onPhoneChange = {},
+            onToggleInterest = {},
+            onSaveClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Perfil con error")
+@Composable
+private fun ProfileContentErrorPreview() {
+    AppMaster_Martini_Grupo1Theme {
+        ProfileContent(
+            state = ProfileUiState(
+                displayName = "Ana Pérez",
+                email = "ana@test.cl",
+                error = "No se pudo guardar el perfil"
             ),
             onDisplayNameChange = {},
             onEmailChange = {},
