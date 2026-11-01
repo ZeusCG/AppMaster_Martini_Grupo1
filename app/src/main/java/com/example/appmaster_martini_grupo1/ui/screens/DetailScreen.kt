@@ -14,14 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,7 +27,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -46,6 +44,8 @@ import com.example.appmaster_martini_grupo1.data.model.Content
 import com.example.appmaster_martini_grupo1.data.model.Course
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import com.example.appmaster_martini_grupo1.data.model.Video
+import com.example.appmaster_martini_grupo1.platform.rememberBitmapFromUri
+import com.example.appmaster_martini_grupo1.ui.components.FavoriteButton
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,6 +60,21 @@ fun DetailScreen(
 
     LaunchedEffect(Unit) { viewModel.loadFavorites() }
 
+    var showCamera by remember { mutableStateOf(false) }
+    var capturedPhotoUri by remember { mutableStateOf<String?>(null) }
+
+    // Recurso nativo: cámara a pantalla completa.
+    if (showCamera) {
+        CameraCaptureScreen(
+            onPhotoTaken = { uri ->
+                capturedPhotoUri = uri
+                showCamera = false
+            },
+            onClose = { showCamera = false }
+        )
+        return
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,16 +85,14 @@ fun DetailScreen(
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSecondary
                         )
-                    ) { Text("<") }
+                    ) { Text("Volver") }
                 },
                 actions = {
-                    val isFavorite = contentId in favoriteIds
-                    IconButton(onClick = { viewModel.toggleFavorite(contentId) }) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos"
-                        )
-                    }
+                    FavoriteButton(
+                        isFavorite = contentId in favoriteIds,
+                        onToggle = { viewModel.toggleFavorite(contentId) },
+                        inactiveColor = MaterialTheme.colorScheme.onSecondary
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
@@ -111,6 +124,8 @@ fun DetailScreen(
             ) {
                 DetailContent(
                     content = content,
+                    photoUri = capturedPhotoUri,
+                    onTakePhoto = { showCamera = true },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -119,7 +134,12 @@ fun DetailScreen(
 }
 
 @Composable
-private fun DetailContent(content: Content, modifier: Modifier = Modifier) {
+private fun DetailContent(
+    content: Content,
+    photoUri: String?,
+    onTakePhoto: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -156,6 +176,28 @@ private fun DetailContent(content: Content, modifier: Modifier = Modifier) {
             is Video -> VideoDetail(content)
             is Course -> CourseDetail(content)
             else -> Unit
+        }
+
+        HorizontalDivider()
+        SectionTitle("Foto de referencia")
+        val bitmap = rememberBitmapFromUri(photoUri)
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = "Foto tomada con la cámara",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text(
+                text = "Aún no has adjuntado una foto.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+        Button(onClick = onTakePhoto, modifier = Modifier.fillMaxWidth()) {
+            Text(if (photoUri == null) "Tomar foto con la cámara" else "Reemplazar foto")
         }
     }
 }
