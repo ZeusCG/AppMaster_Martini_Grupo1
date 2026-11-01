@@ -1,6 +1,5 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,8 +12,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -28,10 +29,18 @@ import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1The
 fun HomeScreen(
     onGoCatalog: () -> Unit = {},
     onGoFavorites: () -> Unit = {},
-    onGoProfile: () -> Unit = {}
+    onGoProfile: () -> Unit = {},
+    onGoLogin: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Master Martini") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Master Martini") },
+                actions = {
+                    TextButton(onClick = onGoLogin) { Text("Iniciar sesión") }
+                }
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
