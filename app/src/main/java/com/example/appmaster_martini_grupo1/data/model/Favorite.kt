@@ -1,4 +1,9 @@
 package com.example.appmaster_martini_grupo1.data.model
 
-class Favorite {
-}
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
+
+@Entity(tableName = "favorites")
+data class Favorite(
+    @PrimaryKey val contentId: String
+)
