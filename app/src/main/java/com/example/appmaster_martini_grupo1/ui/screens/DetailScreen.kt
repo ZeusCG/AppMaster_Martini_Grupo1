@@ -9,21 +9,32 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmaster_martini_grupo1.R
 import com.example.appmaster_martini_grupo1.data.model.Content
@@ -37,17 +48,40 @@ import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
 fun DetailScreen(
     contentId: String,
     onBack: () -> Unit,
-    viewModel: ContentViewModel = viewModel()
+    viewModel: ContentViewModel = viewModel(factory = ContentViewModel.factory(LocalContext.current))
 ) {
     val content = remember(contentId) { viewModel.getContentById(contentId) }
+    val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) { viewModel.loadFavorites() }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Detalle") },
                 navigationIcon = {
-                    TextButton(onClick = onBack) { Text("Volver") }
-                }
+                    TextButton(
+                        onClick = onBack,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSecondary
+                        )
+                    ) { Text("Volver") }
+                },
+                actions = {
+                    val isFavorite = contentId in favoriteIds
+                    IconButton(onClick = { viewModel.toggleFavorite(contentId) }) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Quitar de favoritos" else "Agregar a favoritos"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSecondary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSecondary
+                )
             )
         }
     ) { innerPadding ->
@@ -145,4 +179,4 @@ private fun SectionTitle(text: String) {
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold
     )
-}   
+}
