@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
-import com.example.appmaster_martini_grupo1.ui.screens.HomeScreen
+import com.example.appmaster_martini_grupo1.ui.screens.LoginScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AppMaster_Martini_Grupo1Theme {
-                HomeScreen()
+                LoginScreen()
             }
         }
     }
