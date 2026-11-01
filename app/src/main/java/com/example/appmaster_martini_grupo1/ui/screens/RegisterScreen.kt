@@ -35,7 +35,6 @@ import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1The
 import com.example.appmaster_martini_grupo1.viewmodel.AuthUiState
 import com.example.appmaster_martini_grupo1.viewmodel.AuthViewModel
 
-/** STATEful. NO se previsualiza. */
 @Composable
 fun RegisterScreen(
     viewModel: AuthViewModel = viewModel(),
@@ -61,7 +60,6 @@ fun RegisterScreen(
     )
 }
 
-/** STATELESS: se previsualiza. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterContent(
