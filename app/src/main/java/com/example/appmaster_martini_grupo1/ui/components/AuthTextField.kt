@@ -1,5 +1,10 @@
 package com.example.appmaster_martini_grupo1.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
@@ -25,6 +30,7 @@ fun AuthTextField(
     modifier: Modifier = Modifier,
     error: String? = null,
     icon: ImageVector? = null,
+    // Accesibilidad: los íconos decorativos van en null; si el ícono aporta info, pasa un texto.
     iconContentDescription: String? = null,
     isPassword: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text
@@ -41,7 +47,16 @@ fun AuthTextField(
         leadingIcon = if (icon != null) {
             { Icon(icon, contentDescription = iconContentDescription) }
         } else null,
-        supportingText = if (error != null) { { Text(error) } } else null,
+        // ANIMACIÓN: el mensaje de error se expande/contrae con fade en vez de aparecer de golpe.
+        supportingText = {
+            AnimatedVisibility(
+                visible = error != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Text(error.orEmpty())
+            }
+        },
         visualTransformation =
             if (isPassword && !visible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(
@@ -49,6 +64,7 @@ fun AuthTextField(
         ),
         trailingIcon = if (isPassword) {
             {
+                // El botón tiene texto ("Ver"/"Ocultar"), así que TalkBack ya lo anuncia.
                 TextButton(onClick = { visible = !visible }) {
                     Text(if (visible) "Ocultar" else "Ver")
                 }

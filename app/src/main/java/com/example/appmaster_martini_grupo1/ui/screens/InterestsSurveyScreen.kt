@@ -1,5 +1,10 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -83,8 +88,12 @@ fun InterestsSurveyContent(
                 onToggle = onToggleInterest
             )
 
-            state.error?.let { msg ->
-                Text(text = msg, color = MaterialTheme.colorScheme.error)
+            AnimatedVisibility(
+                visible = state.error != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Text(text = state.error.orEmpty(), color = MaterialTheme.colorScheme.error)
             }
 
             Button(
