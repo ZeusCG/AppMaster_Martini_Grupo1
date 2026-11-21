@@ -10,6 +10,7 @@ import com.example.appmaster_martini_grupo1.data.local.AppDatabase
 import com.example.appmaster_martini_grupo1.data.model.Content
 import com.example.appmaster_martini_grupo1.data.repository.ContentRepository
 import com.example.appmaster_martini_grupo1.data.repository.FavoriteRepository
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,14 +64,16 @@ class ContentViewModel(
     }
 
     fun loadFavorites() {
+        val uid = UserSession.userId.value ?: return
         viewModelScope.launch {
-            _favoriteIds.value = favoriteRepository.getFavoriteIds().toSet()
+            _favoriteIds.value = favoriteRepository.getFavoriteIds(uid).toSet()
         }
     }
 
     fun isFavorite(contentId: String): Boolean = contentId in _favoriteIds.value
 
     fun toggleFavorite(contentId: String) {
+        val uid = UserSession.userId.value ?: return
         val nowFavorite = !isFavorite(contentId)
         _favoriteIds.value = if (nowFavorite) {
             _favoriteIds.value + contentId
@@ -78,8 +81,8 @@ class ContentViewModel(
             _favoriteIds.value - contentId
         }
         viewModelScope.launch {
-            if (nowFavorite) favoriteRepository.add(contentId)
-            else favoriteRepository.remove(contentId)
+            if (nowFavorite) favoriteRepository.add(uid, contentId)
+            else favoriteRepository.remove(uid, contentId)
         }
     }
 

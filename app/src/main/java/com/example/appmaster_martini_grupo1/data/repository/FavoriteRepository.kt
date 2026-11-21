@@ -9,17 +9,17 @@ class FavoriteRepository(
     private val favoriteDao: FavoriteDao? = null
 ) {
 
-    fun observeFavoriteIds(): Flow<List<String>> =
-        favoriteDao?.observeFavoriteIds() ?: emptyFlow()
+    fun observeFavoriteIds(userId: Long): Flow<List<String>> =
+        favoriteDao?.observeFavoriteIds(userId) ?: emptyFlow()
 
-    suspend fun getFavoriteIds(): List<String> =
-        favoriteDao?.getFavoriteIds() ?: emptyList()
+    suspend fun getFavoriteIds(userId: Long): List<String> =
+        favoriteDao?.getFavoriteIds(userId) ?: emptyList()
 
-    suspend fun add(contentId: String) {
-        favoriteDao?.insert(Favorite(contentId = contentId))
+    suspend fun add(userId: Long, contentId: String) {
+        favoriteDao?.insert(Favorite(userId = userId, contentId = contentId))
     }
 
-    suspend fun remove(contentId: String) {
-        favoriteDao?.deleteById(contentId)
+    suspend fun remove(userId: Long, contentId: String) {
+        favoriteDao?.deleteById(userId, contentId)
     }
 }

@@ -83,7 +83,21 @@ class ContentRepository {
                 "Atemperado",
                 "Moldes y bombones"
             )
+        ),
+        Course(
+            id = "course-1236",
+            title = "NOSE artesanal",
+            description = "NADA, NOSE y control de MI INTELIGENCIA.",
+            category = "Cursos",
+            durationHours = 30,
+            level = "Avanzado",
+            lessons = listOf(
+                "PENSAR primas",
+                "MENTE FRIA",
+                "Modelos a seguir"
+            )
         )
+
     )
 
     fun getContent(): List<Content> = sampleContent

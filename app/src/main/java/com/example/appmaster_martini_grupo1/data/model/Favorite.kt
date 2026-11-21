@@ -1,9 +1,9 @@
 package com.example.appmaster_martini_grupo1.data.model
 
 import androidx.room3.Entity
-import androidx.room3.PrimaryKey
 
-@Entity(tableName = "favorites")
+@Entity(tableName = "favorites", primaryKeys = ["userId", "contentId"])
 data class Favorite(
-    @PrimaryKey val contentId: String
+    val userId: Long,
+    val contentId: String
 )
