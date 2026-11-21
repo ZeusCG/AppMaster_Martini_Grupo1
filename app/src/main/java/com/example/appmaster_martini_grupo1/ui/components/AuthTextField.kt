@@ -63,7 +63,6 @@ fun AuthTextField(
         ),
         trailingIcon = if (isPassword) {
             {
-                // El botón tiene texto ("Ver"/"Ocultar"), así que TalkBack ya lo anuncia.
                 TextButton(onClick = { visible = !visible }) {
                     Text(if (visible) "Ocultar" else "Ver")
                 }

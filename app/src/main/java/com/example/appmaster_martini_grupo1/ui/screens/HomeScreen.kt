@@ -20,6 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import androidx.compose.ui.unit.dp
 import com.example.appmaster_martini_grupo1.R
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
@@ -30,14 +33,22 @@ fun HomeScreen(
     onGoCatalog: () -> Unit = {},
     onGoFavorites: () -> Unit = {},
     onGoProfile: () -> Unit = {},
-    onGoLogin: () -> Unit = {}
+    onGoInfo: () -> Unit = {},
+    onGoLogin: () -> Unit = {},
+    onLogout: () -> Unit = {}
 ) {
+    val userId by UserSession.userId.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
+
             TopAppBar(
                 title = { Text("Master Martini") },
                 actions = {
-                    TextButton(onClick = onGoLogin) { Text("Iniciar sesión") }
+                    if (userId == null) {
+                        TextButton(onClick = onGoLogin) { Text("Iniciar sesión") }
+                    } else {
+                        TextButton(onClick = onLogout) { Text("Cerrar Sesión") }
+                    }
                 }
             )
         }
@@ -68,6 +79,9 @@ fun HomeScreen(
             }
             Button(onClick = onGoProfile, modifier = Modifier.fillMaxWidth()) {
                 Text("Mi perfil")
+            }
+            Button(onClick = onGoInfo, modifier = Modifier.fillMaxWidth()) {
+                Text("Informacion")
             }
         }
     }
