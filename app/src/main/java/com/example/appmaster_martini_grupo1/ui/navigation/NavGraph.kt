@@ -1,6 +1,5 @@
 package com.example.appmaster_martini_grupo1.ui.navigation
 
-import android.icu.text.IDNA
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -20,6 +19,8 @@ import com.example.appmaster_martini_grupo1.ui.screens.InfoScreen
 import com.example.appmaster_martini_grupo1.ui.screens.LoginScreen
 import com.example.appmaster_martini_grupo1.ui.screens.ProfileScreen
 import com.example.appmaster_martini_grupo1.ui.screens.RegisterScreen
+import com.example.appmaster_martini_grupo1.ui.screens.ContactScreen
+import com.example.appmaster_martini_grupo1.ui.screens.ManageContentScreen
 
 object Routes {
     const val LOGIN = "login"
@@ -30,8 +31,12 @@ object Routes {
     const val FAVORITES = "favorites"
     const val  INFO = "info"
     const val DETAIL = "detail/{id}"
+    const val MANAGE = "manage"
+
+    const val CONTACT = "contact"
 
     fun detail(id: String) = "detail/$id"
+
 }
 
 private const val ANIM_MS = 320
@@ -75,10 +80,9 @@ fun AppNavGraph(
         composable(Routes.LOGIN) {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
+                // HOME es la raíz del back stack: al autenticarse se vuelve a ella sin duplicarla.
                 onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
+                    navController.popBackStack(Routes.HOME, inclusive = false)
                 }
             )
         }
@@ -87,29 +91,33 @@ fun AppNavGraph(
             RegisterScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onRegisterSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
+                    navController.popBackStack(Routes.HOME, inclusive = false)
                 }
             )
         }
 
         composable(Routes.HOME) {
             HomeScreen(
+                onGoManage = { navController.navigate(Routes.MANAGE) },
+                onGoContact = { navController.navigate(Routes.CONTACT) },
                 onGoCatalog = { navController.navigate(Routes.CATALOG) },
                 onGoFavorites = { navController.navigate(Routes.FAVORITES) },
                 onGoProfile = { navController.navigate(Routes.PROFILE) },
-                onGoInfo = {navController.navigate(Routes.INFO)},
-                onGoLogin = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = true }
-                    }
-                },
+                onGoInfo = { navController.navigate(Routes.INFO) },
+                onGoLogin = { navController.navigate(Routes.LOGIN) },
                 onLogout = {
                     UserSession.clear()
-                    navController.navigate(Routes.LOGIN) {popUpTo(Routes.HOME){inclusive = true}}
+                    navController.navigate(Routes.LOGIN)
                 }
             )
+        }
+
+        composable(Routes.MANAGE) {
+            ManageContentScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.CONTACT) {
+            ContactScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.INFO) {
