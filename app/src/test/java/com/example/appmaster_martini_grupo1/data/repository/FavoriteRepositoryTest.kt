@@ -1,5 +1,6 @@
 package com.example.appmaster_martini_grupo1.data.repository
 
+
 import com.example.appmaster_martini_grupo1.data.local.FavoriteDao
 import com.example.appmaster_martini_grupo1.data.model.Favorite
 import kotlinx.coroutines.flow.Flow
@@ -21,41 +22,41 @@ class FavoriteRepositoryTest {
             }
         }
 
-        override suspend fun deleteById(contentId: String) {
+        override suspend fun deleteById(userId: Long, contentId: String) {
             ids.value = ids.value - contentId
         }
 
-        override fun observeFavoriteIds(): Flow<List<String>> = ids
+        override fun observeFavoriteIds(userId: Long): Flow<List<String>> = ids
 
-        override suspend fun getFavoriteIds(): List<String> = ids.value
+        override suspend fun getFavoriteIds(userId: Long): List<String> = ids.value
     }
 
     @Test
     fun agrega_y_lista_favorito() = runBlocking {
         val repository = FavoriteRepository(FakeFavoriteDao())
 
-        repository.add("recipe-001")
+        repository.add(1L, "recipe-001")
 
-        assertTrue(repository.getFavoriteIds().contains("recipe-001"))
-        assertTrue(repository.observeFavoriteIds().first().contains("recipe-001"))
+        assertTrue(repository.getFavoriteIds(1L).contains("recipe-001"))
+        assertTrue(repository.observeFavoriteIds(1L).first().contains("recipe-001"))
     }
 
     @Test
     fun quita_favorito() = runBlocking {
         val repository = FavoriteRepository(FakeFavoriteDao())
-        repository.add("recipe-001")
+        repository.add(1L, "recipe-001")
 
-        repository.remove("recipe-001")
+        repository.remove(1L, "recipe-001")
 
-        assertFalse(repository.getFavoriteIds().contains("recipe-001"))
+        assertFalse(repository.getFavoriteIds(1L).contains("recipe-001"))
     }
 
     @Test
     fun sin_dao_no_falla_y_devuelve_vacio() = runBlocking {
         val repository = FavoriteRepository()
 
-        repository.add("recipe-001")
+        repository.add(1L, "recipe-001")
 
-        assertTrue(repository.getFavoriteIds().isEmpty())
+        assertTrue(repository.getFavoriteIds(1L).isEmpty())
     }
 }

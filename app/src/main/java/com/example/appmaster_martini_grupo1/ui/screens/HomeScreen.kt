@@ -32,6 +32,8 @@ import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1The
 fun HomeScreen(
     onGoCatalog: () -> Unit = {},
     onGoFavorites: () -> Unit = {},
+    onGoManage: () -> Unit = {},
+    onGoContact: () -> Unit = {},
     onGoProfile: () -> Unit = {},
     onGoInfo: () -> Unit = {},
     onGoLogin: () -> Unit = {},
@@ -73,6 +75,12 @@ fun HomeScreen(
 
             Button(onClick = onGoCatalog, modifier = Modifier.fillMaxWidth()) {
                 Text("Ver catálogo")
+            }
+            Button(onClick = onGoManage, modifier = Modifier.fillMaxWidth()) {
+                Text("Gestionar contenido")
+            }
+            Button(onClick = onGoContact, modifier = Modifier.fillMaxWidth()) {
+                Text("Contactar a un asesor")
             }
             Button(onClick = onGoFavorites, modifier = Modifier.fillMaxWidth()) {
                 Text("Mis favoritos")
