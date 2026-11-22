@@ -1,13 +1,29 @@
 package com.example.appmaster_martini_grupo1.viewmodel
 
+import com.example.appmaster_martini_grupo1.MainDispatcherRule
+import com.example.appmaster_martini_grupo1.data.model.Profile
+import com.example.appmaster_martini_grupo1.data.repository.ProfileRepository
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.just
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class ProfileViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
     private val viewModel = ProfileViewModel()
+
+    // --- Validación (síncrono) ---
 
     @Test
     fun nombreCortoMarcaErrorDeNombre() {
@@ -63,5 +79,36 @@ class ProfileViewModelTest {
         viewModel.loadProfile(1L)
 
         assertNotNull(viewModel.uiState.value)
+    }
+
+    // --- Con repositorio mockeado ---
+
+    @Test
+    fun loadProfile_carga_los_datos() = runTest {
+        val repository = mockk<ProfileRepository>()
+        coEvery { repository.getByUserId(1L) } returns Profile(
+            userId = 1L, displayName = "Ana", email = "ana@test.cl", phone = "+56912345678"
+        )
+        val vm = ProfileViewModel(repository)
+
+        vm.loadProfile(1L)
+
+        assertEquals("Ana", vm.uiState.value.displayName)
+        assertEquals("ana@test.cl", vm.uiState.value.email)
+    }
+
+    @Test
+    fun saveProfile_guarda_en_el_repositorio() = runTest {
+        val repository = mockk<ProfileRepository>(relaxed = true)
+        coEvery { repository.save(any()) } just Runs
+        val vm = ProfileViewModel(repository)
+        vm.onDisplayNameChange("Ana")
+        vm.onEmailChange("ana@test.cl")
+        vm.onPhoneChange("+56912345678")
+
+        vm.saveProfile()
+
+        coVerify { repository.save(any()) }
+        assertEquals("Perfil guardado correctamente", vm.uiState.value.savedMessage)
     }
 }
