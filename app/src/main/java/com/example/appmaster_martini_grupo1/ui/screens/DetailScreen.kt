@@ -52,8 +52,6 @@ fun DetailScreen(
     onBack: () -> Unit,
     viewModel: ContentViewModel = viewModel(factory = ContentViewModel.factory(LocalContext.current))
 ) {
-    // H-007: el contenido se deriva del estado reactivo (Room), no de un `remember`
-    // que se calculaba una sola vez contra la semilla.
     val items by viewModel.content.collectAsStateWithLifecycle()
     val content = items.firstOrNull { it.id == contentId }
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
@@ -63,7 +61,6 @@ fun DetailScreen(
     var showCamera by remember { mutableStateOf(false) }
     var capturedPhotoUri by remember { mutableStateOf<String?>(null) }
 
-    // Recurso nativo: cámara a pantalla completa.
     if (showCamera) {
         CameraCaptureScreen(
             onPhotoTaken = { uri ->

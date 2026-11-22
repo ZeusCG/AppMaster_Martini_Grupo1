@@ -95,7 +95,6 @@ class AuthViewModel(
         }
         _uiState.update { it.copy(isLoading = true, authError = null) }
         viewModelScope.launch {
-            // H-035: sin try/catch, una excepción de la BD cerraba la app.
             try {
                 val user = repo.authenticate(_uiState.value.email.trim(), _uiState.value.password)
                 if (user == null) {
@@ -138,9 +137,7 @@ class AuthViewModel(
                     phone = s.phone.trim(),
                 )
                 val db = database
-                // El hash se calcula ANTES de la transacción (evita cambiar de dispatcher dentro de ella).
                 val hashed = userRepo.hashPassword(newUser.password)
-                // H-017: usuario y perfil se guardan en una sola transacción (todo o nada).
                 val newId = if (db != null) {
                     db.withWriteTransaction {
                         val id = userRepo.insertWithHash(newUser, hashed)
@@ -155,7 +152,6 @@ class AuthViewModel(
                 UserSession.set(newId)
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true, userId = newId) }
             } catch (e: Exception) {
-                // H-012: el índice UNIQUE del email produce un error de constraint.
                 val duplicado = e.message?.contains("UNIQUE", ignoreCase = true) == true
                 _uiState.update {
                     it.copy(

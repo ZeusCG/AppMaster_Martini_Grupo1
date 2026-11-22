@@ -30,7 +30,6 @@ class ContactoViewModelTest {
         UserSession.clear()
     }
 
-    // --- Validación (sin red, síncrono) ---
 
     private val viewModel = ContactoViewModel()
 
@@ -79,7 +78,6 @@ class ContactoViewModelTest {
         assertEquals("Consulta", viewModel.uiState.value.form.subject)
     }
 
-    // --- Con repositorio mockeado (coroutines-test) ---
 
     @Test
     fun send_exitoso_expone_sent() = runTest {

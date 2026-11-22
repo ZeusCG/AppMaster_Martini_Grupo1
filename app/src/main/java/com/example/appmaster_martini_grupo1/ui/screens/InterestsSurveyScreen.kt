@@ -45,7 +45,6 @@ fun InterestsSurveyScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(userId) { viewModel.loadProfile(userId) }
-    // Cuando el guardado tiene éxito, avisa a quien navega.
     LaunchedEffect(state.savedMessage) {
         if (state.savedMessage != null) onDone()
     }

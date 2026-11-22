@@ -51,7 +51,6 @@ fun HomeScreen(
     val userId by UserSession.userId.collectAsStateWithLifecycle()
     val climaState by climaViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Se pide el clima al primer render (H-018).
     LaunchedEffect(Unit) { climaViewModel.load() }
 
     Scaffold(
@@ -102,7 +101,6 @@ fun HomeScreen(
                 Text(stringResource(R.string.home_favorites))
             }
             Button(
-                // H-008: sin sesión no hay perfil que cargar/guardar; se pide iniciar sesión.
                 onClick = { if (userId == null) onGoLogin() else onGoProfile() },
                 modifier = Modifier.fillMaxWidth()
             ) {

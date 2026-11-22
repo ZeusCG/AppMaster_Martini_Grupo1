@@ -85,7 +85,6 @@ class UserRepositoryTest {
         assertNull(repository.authenticate("nadie@test.cl", "Martini2026"))
     }
 
-    // H-026: cubre findByEmail/getById y la normalización del correo (H-012).
     @Test
     fun findByEmail_y_getById_encuentran_al_usuario() = runBlocking {
         val dao = FakeUserDao()

@@ -17,13 +17,10 @@ class ContentRepository(
     private val database: RoomDatabase? = null
 ) {
 
-    /** true cuando hay BD Room detrás (en la app); false en tests sin DAO. */
     val isPersistent: Boolean get() = contentDao != null
 
-    /** Contenido inicial en memoria (semilla), disponible al instante antes de que Room emita. */
     fun seed(): List<Content> = ContentSeed.items
 
-    /** Observa el contenido guardado. Sin DAO (tests) entrega la semilla. */
     fun observeAll(): Flow<List<Content>> =
         contentDao?.observeAll()?.map { entities -> entities.map { it.toContent() } }
             ?: flowOf(ContentSeed.items)
@@ -32,15 +29,10 @@ class ContentRepository(
         contentDao?.getById(id)?.toContent()
             ?: ContentSeed.items.firstOrNull { it.id == id }
 
-    /** Inserta o actualiza (upsert). */
     suspend fun upsert(content: Content) {
         contentDao?.upsert(content.toEntity())
     }
 
-    /**
-     * Elimina el contenido y, de paso, sus favoritos (para no dejar huérfanos).
-     * H-014: si hay BD, las dos escrituras van en una sola transacción (todo o nada).
-     */
     suspend fun delete(id: String) {
         val dao = contentDao ?: return
         val favorites = favoriteRepository

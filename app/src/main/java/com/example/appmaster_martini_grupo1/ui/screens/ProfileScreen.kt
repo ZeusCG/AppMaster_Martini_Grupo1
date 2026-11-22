@@ -95,7 +95,6 @@ fun ProfileScreen(
     val sessionId by UserSession.userId.collectAsStateWithLifecycle()
     val effectiveId = sessionId ?: userId
 
-    // H-008: sin sesión no hay perfil que cargar/guardar (evita el guardado con userId = 0 y su error de FK).
     if (effectiveId == 0L) {
         Scaffold(topBar = { AppTopBar(title = "Mi perfil", onBack = onBack) }) { padding ->
             Box(

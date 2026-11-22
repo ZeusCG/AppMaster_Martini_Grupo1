@@ -12,7 +12,6 @@ class ContactoRepository(
     private val solicitudDao: SolicitudContactoDao? = null
 ) {
 
-    /** true cuando hay BD Room detrás (en la app); false en tests sin DAO. */
     val isPersistent: Boolean get() = solicitudDao != null
 
     fun observeHistory(userId: Long): Flow<List<SolicitudContacto>> =
@@ -21,15 +20,9 @@ class ContactoRepository(
     suspend fun getHistory(userId: Long): List<SolicitudContacto> =
         solicitudDao?.getByUser(userId) ?: emptyList()
 
-    /**
-     * Guarda la solicitud en Room como "pendiente" y luego la envía por POST.
-     * Si el POST responde OK, la marca "enviada"; si falla, queda "pendiente"
-     * (no se pierde: el historial la conserva).
-     */
     suspend fun send(userId: Long, asunto: String, mensaje: String): SolicitudContacto {
         val pendiente = SolicitudContacto(userId = userId, asunto = asunto, mensaje = mensaje)
         return try {
-            // H-035: el guardado local también va dentro del try (antes un fallo aquí no se capturaba).
             val id = solicitudDao?.insert(pendiente) ?: 0L
             val guardada = pendiente.copy(id = id)
 
@@ -47,7 +40,6 @@ class ContactoRepository(
                 }
             }
         } catch (_: Exception) {
-            // Si falla incluso el guardado local, se devuelve la solicitud "pendiente" en memoria.
             pendiente
         }
     }

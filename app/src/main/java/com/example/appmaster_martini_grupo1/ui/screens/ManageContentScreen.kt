@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,12 +34,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmaster_martini_grupo1.R
 import com.example.appmaster_martini_grupo1.data.model.Content
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.viewmodel.ContentField
@@ -46,17 +50,16 @@ import com.example.appmaster_martini_grupo1.viewmodel.ContentForm
 import com.example.appmaster_martini_grupo1.viewmodel.ContentType
 import com.example.appmaster_martini_grupo1.viewmodel.ManageContentViewModel
 
-/**
- * Pantalla "Gestionar contenido" (H-005): lista con editar/eliminar (con confirmación)
- * y formulario de crear/editar con validación por campo. Consume solo el ViewModel.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageContentScreen(
     onBack: () -> Unit = {},
+    onGoLogin: () -> Unit = {},
     viewModel: ManageContentViewModel = viewModel(factory = ManageContentViewModel.factory(LocalContext.current))
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val userId by UserSession.userId.collectAsStateWithLifecycle()
+    val canEdit = userId != null
     var showForm by remember { mutableStateOf(false) }
     var confirmDeleteId by remember { mutableStateOf<String?>(null) }
 
@@ -81,21 +84,28 @@ fun ManageContentScreen(
                     onFieldChange = viewModel::onFieldChange,
                     onSave = {
                         viewModel.save()
-                        // Si no quedaron errores por campo, el guardado fue válido: cierra el formulario.
                         if (!viewModel.uiState.value.form.hasFieldErrors()) showForm = false
                     },
                     onCancel = { showForm = false }
                 )
             } else {
-                Button(
-                    onClick = { viewModel.startCreate(); showForm = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Crear contenido")
+                if (canEdit) {
+                    Button(
+                        onClick = { viewModel.startCreate(); showForm = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Crear contenido")
+                    }
+                } else {
+                    LoginNotice(onGoLogin = onGoLogin)
                 }
 
                 if (state.items.isEmpty()) {
-                    Text("Aún no hay contenido. Crea el primero con el botón de arriba.")
+                    Text(
+                        stringResource(
+                            if (canEdit) R.string.manage_empty else R.string.manage_empty_readonly
+                        )
+                    )
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -104,6 +114,7 @@ fun ManageContentScreen(
                         items(state.items, key = { it.id }) { item ->
                             ManageContentRow(
                                 item = item,
+                                canEdit = canEdit,
                                 onEdit = { viewModel.startEdit(item.id); showForm = true },
                                 onDelete = { confirmDeleteId = item.id }
                             )
@@ -133,6 +144,7 @@ fun ManageContentScreen(
 @Composable
 private fun ManageContentRow(
     item: Content,
+    canEdit: Boolean,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -144,11 +156,37 @@ private fun ManageContentRow(
             Text(item.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(item.category, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         }
-        IconButton(onClick = onEdit) {
-            Icon(Icons.Filled.Edit, contentDescription = "Editar ${item.title}")
+        if (canEdit) {
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Filled.Edit, contentDescription = "Editar ${item.title}")
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Filled.Delete, contentDescription = "Eliminar ${item.title}")
+            }
         }
-        IconButton(onClick = onDelete) {
-            Icon(Icons.Filled.Delete, contentDescription = "Eliminar ${item.title}")
+    }
+}
+
+@Composable
+private fun LoginNotice(onGoLogin: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(R.string.manage_login_required),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(12.dp)
+            )
+        }
+        Button(onClick = onGoLogin, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.action_login))
         }
     }
 }

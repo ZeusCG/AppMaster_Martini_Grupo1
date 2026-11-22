@@ -4,18 +4,10 @@ import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
-/**
- * Deriva y verifica contraseñas con sal. Nunca se guarda la contraseña en texto plano.
- * Formato almacenado: "iteraciones:saltHex:hashHex".
- * Se usa PBKDF2 (disponible en todas las versiones de Android soportadas); hex evita
- * depender de Base64 (que en Android requiere API 26 y minSdk es 24).
- */
 object PasswordHasher {
 
     private const val ALGORITHM = "PBKDF2WithHmacSHA1"
 
-    // H-013: 100.000 iteraciones (antes 10.000, bajo frente a la recomendación actual).
-    // Las iteraciones se guardan dentro del hash, así que los hashes viejos siguen verificando.
     private const val ITERATIONS = 100_000
     private const val KEY_LENGTH_BITS = 256
     private const val SALT_BYTES = 16

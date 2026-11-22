@@ -63,7 +63,6 @@ fun AppNavGraph(
                 tween(ANIM_MS)
             ) + fadeOut(tween(ANIM_MS))
         },
-        // Volver (pop): al revés.
         popEnterTransition = {
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.Right,
@@ -80,7 +79,6 @@ fun AppNavGraph(
         composable(Routes.LOGIN) {
             LoginScreen(
                 onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
-                // HOME es la raíz del back stack: al autenticarse se vuelve a ella sin duplicarla.
                 onLoginSuccess = {
                     navController.popBackStack(Routes.HOME, inclusive = false)
                 }
@@ -90,7 +88,6 @@ fun AppNavGraph(
         composable(Routes.REGISTER) {
             RegisterScreen(
                 onNavigateBack = { navController.popBackStack() },
-                // H-010: tras registrarse se pasa por la encuesta de intereses antes de volver a Home.
                 onRegisterSuccess = {
                     navController.navigate(Routes.INTERESTS) {
                         popUpTo(Routes.HOME) { inclusive = false }
@@ -115,7 +112,6 @@ fun AppNavGraph(
                 onGoProfile = { navController.navigate(Routes.PROFILE) },
                 onGoInfo = { navController.navigate(Routes.INFO) },
                 onGoLogin = { navController.navigate(Routes.LOGIN) },
-                // H-009: al cerrar sesión se limpia el back stack para que "atrás" no vuelva a Home.
                 onLogout = {
                     UserSession.clear()
                     navController.navigate(Routes.LOGIN) {
@@ -126,7 +122,10 @@ fun AppNavGraph(
         }
 
         composable(Routes.MANAGE) {
-            ManageContentScreen(onBack = { navController.popBackStack() })
+            ManageContentScreen(
+                onBack = { navController.popBackStack() },
+                onGoLogin = { navController.navigate(Routes.LOGIN) }
+            )
         }
 
         composable(Routes.CONTACT) {

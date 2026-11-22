@@ -94,11 +94,9 @@ class ContactoViewModel(
         _uiState.update { it.copy(history = it.history.filterNot { solicitud -> solicitud.id == id }) }
         if (repository.isPersistent) {
             viewModelScope.launch {
-                // H-035: un fallo al borrar no debe cerrar la app.
                 try {
                     repository.delete(id)
                 } catch (_: Exception) {
-                    // El historial se recargará al reabrir la pantalla.
                 }
             }
         }

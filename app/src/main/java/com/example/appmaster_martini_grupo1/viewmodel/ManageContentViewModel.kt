@@ -141,7 +141,6 @@ class ManageContentViewModel(
         }
 
         if (repository.isPersistent) {
-            // H-017: esperar la escritura y avisar si falla (antes mostraba "creado" sin persistir).
             viewModelScope.launch {
                 try {
                     repository.upsert(content)
@@ -187,7 +186,6 @@ class ManageContentViewModel(
     }
 }
 
-// --- Validación del formulario ---
 
 private fun ContentForm.hasErrors(): Boolean =
     listOf(titleError, categoryError, descriptionError, portionsError, durationError, urlError, levelError)

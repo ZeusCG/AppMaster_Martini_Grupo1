@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -99,12 +99,11 @@ fun ContentCardPreview() {
     }
 }
 
-/** H-043: un ícono distinto por tipo, en vez del mismo logo para todos. */
 private fun Content.typeIcon(): ImageVector = when (this) {
-    is Recipe -> Icons.Filled.List
+    is Recipe -> Icons.AutoMirrored.Filled.List
     is Video -> Icons.Filled.PlayArrow
     is Course -> Icons.Filled.Star
-    else -> Icons.Filled.List
+    else -> Icons.AutoMirrored.Filled.List
 }
 
 private fun Content.typeDescription(): String = when (this) {

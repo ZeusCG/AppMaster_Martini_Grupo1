@@ -44,7 +44,6 @@ fun FavoritesScreen(
     Scaffold(
         topBar = { AppTopBar(title = "Mis favoritos", onBack = onBack) }
     ) { innerPadding ->
-        // H-040: cargando / error / vacío real.
         when (val state = uiState) {
             ContentUiState.Loading -> CenteredMessage(innerPadding) { CircularProgressIndicator() }
             is ContentUiState.Error -> CenteredMessage(innerPadding) { Text(state.message) }

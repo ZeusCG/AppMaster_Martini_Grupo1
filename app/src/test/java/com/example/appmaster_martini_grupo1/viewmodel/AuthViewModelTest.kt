@@ -28,7 +28,6 @@ class AuthViewModelTest {
         UserSession.clear()
     }
 
-    // --- Validación (síncrono) ---
 
     @Test
     fun correoInvalidoMuestraErrorDeEmail() {
@@ -79,7 +78,6 @@ class AuthViewModelTest {
         assertNotNull(vm.uiState.value.rutError)
     }
 
-    // --- Con repositorios mockeados (login/registro exitosos) ---
 
     @Test
     fun login_exitoso_marca_la_sesion() = runTest {
@@ -115,7 +113,6 @@ class AuthViewModelTest {
     fun registro_exitoso_crea_usuario_y_perfil() = runTest {
         val userRepository = mockk<UserRepository>()
         val profileRepository = mockk<ProfileRepository>(relaxed = true)
-        // El registro ahora hashea fuera de la transacción y luego inserta (H-013/H-017).
         coEvery { userRepository.hashPassword(any()) } returns "hash"
         coEvery { userRepository.insertWithHash(any(), any()) } returns 1L
         coEvery { profileRepository.save(any()) } just Runs

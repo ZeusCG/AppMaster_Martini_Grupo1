@@ -30,7 +30,6 @@ fun AuthTextField(
     modifier: Modifier = Modifier,
     error: String? = null,
     icon: ImageVector? = null,
-    // Accesibilidad: los íconos decorativos van en null; si el ícono aporta info, pasa un texto.
     iconContentDescription: String? = null,
     isPassword: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text

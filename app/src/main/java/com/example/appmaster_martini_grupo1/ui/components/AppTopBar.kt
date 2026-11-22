@@ -14,10 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 
-/**
- * Barra superior reutilizable (H-041/H-042): evita repetir 12 `TopAppBar` y usa
- * un ícono de "Volver" accesible en vez del texto "<" (que TalkBack leía como "menor que").
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(

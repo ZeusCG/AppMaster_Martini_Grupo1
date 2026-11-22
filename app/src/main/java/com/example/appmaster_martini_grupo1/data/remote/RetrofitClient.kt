@@ -7,14 +7,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/** Construye los clientes HTTP (Retrofit + Gson + logs). Sin inyección de dependencias, para que sea explicable. */
 object RetrofitClient {
 
     private const val BASE_URL_CLIMA = "https://api.open-meteo.com/"
     private const val BASE_URL_CONTACTO = "https://jsonplaceholder.typicode.com/"
 
     private val logging = HttpLoggingInterceptor().apply {
-        // H-020: logs solo en debug; en release no se dejan trazas de URLs/estados.
         level = if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor.Level.BASIC
         } else {
@@ -23,7 +21,6 @@ object RetrofitClient {
     }
 
     private val httpClient: OkHttpClient = OkHttpClient.Builder()
-        // H-019: timeouts explícitos (antes se usaban los valores por defecto de OkHttp).
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)

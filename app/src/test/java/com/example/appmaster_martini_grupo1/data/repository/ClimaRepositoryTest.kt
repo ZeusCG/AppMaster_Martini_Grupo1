@@ -86,7 +86,6 @@ class ClimaRepositoryTest {
         val dao = FakeClimaDao()
         ClimaRepository(FakeClimaApi(respuestaOk()), dao).getClima()
 
-        // Cae la red: nueva API que falla, mismo cache.
         val repository = ClimaRepository(FakeClimaApi(falla = true), dao)
 
         val resultado = repository.obtenerClima()

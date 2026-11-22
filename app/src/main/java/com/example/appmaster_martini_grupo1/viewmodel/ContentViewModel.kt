@@ -27,7 +27,6 @@ class ContentViewModel(
     private val favoriteRepository: FavoriteRepository = FavoriteRepository()
 ) : ViewModel() {
 
-    // Última lista completa (de Room o, en tests, de la semilla en memoria).
     private var allContent: List<Content> = repository.seed()
 
     private val _uiState = MutableStateFlow<ContentUiState>(ContentUiState.Loading)
@@ -42,7 +41,6 @@ class ContentViewModel(
     private val _selectedCategory = MutableStateFlow<String?>(null)
     val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
 
-    // Se calcula al vuelo: cuando `content` cambia, la pantalla se recompone y las lee actualizadas.
     val categories: List<String>
         get() = allContent.map { it.category }.distinct().sorted()
 
@@ -101,7 +99,6 @@ class ContentViewModel(
     fun loadFavorites() {
         val uid = UserSession.userId.value ?: return
         viewModelScope.launch {
-            // H-035: no dejar que un fallo de la BD cierre la app.
             try {
                 _favoriteIds.value = favoriteRepository.getFavoriteIds(uid).toSet()
             } catch (_: Exception) {
@@ -121,7 +118,6 @@ class ContentViewModel(
             _favoriteIds.value - contentId
         }
         viewModelScope.launch {
-            // H-035: si falla la persistencia, se revierte el cambio optimista.
             try {
                 if (nowFavorite) favoriteRepository.add(uid, contentId)
                 else favoriteRepository.remove(uid, contentId)
@@ -135,17 +131,13 @@ class ContentViewModel(
         }
     }
 
-    /** Búsqueda síncrona sobre la lista ya cargada (la usa la pantalla de detalle). */
     fun getContentById(id: String): Content? = allContent.firstOrNull { it.id == id }
 
-    /** Inserta o actualiza contenido (lo usará la pantalla de gestión, D1.3). */
     fun saveContent(content: Content) {
         viewModelScope.launch { repository.upsert(content) }
     }
 
-    /** Elimina contenido por id (lo usará la pantalla de gestión, D1.3). */
     fun deleteContent(id: String) {
-        // Quita el favorito en memoria para que no quede "colgado" en la UI.
         _favoriteIds.value = _favoriteIds.value - id
         viewModelScope.launch { repository.delete(id) }
     }

@@ -3,10 +3,6 @@ package com.example.appmaster_martini_grupo1.data.local
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
 
-/**
- * Contenido del catálogo (recetas, videos y cursos) en una sola tabla.
- * El campo [type] indica el subtipo y las listas se guardan como texto (un ítem por línea).
- */
 @Entity(tableName = "contents")
 data class ContentEntity(
     @PrimaryKey val id: String,

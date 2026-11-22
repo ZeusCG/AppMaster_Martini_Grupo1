@@ -11,7 +11,6 @@ const val TYPE_COURSE = "COURSE"
 
 private const val ITEM_SEPARATOR = "\n"
 
-/** Convierte la fila de Room al modelo de dominio que usa la UI. */
 fun ContentEntity.toContent(): Content = when (type) {
     TYPE_RECIPE -> Recipe(
         id = id,
@@ -42,11 +41,9 @@ fun ContentEntity.toContent(): Content = when (type) {
         lessons = lessons.toItems()
     )
 
-    // H-016: no asumir "Course" ante un tipo desconocido/corrupto; se detecta en vez de ocultarlo.
     else -> error("Tipo de contenido desconocido: $type")
 }
 
-/** Convierte el modelo de dominio a la fila de Room. */
 fun Content.toEntity(): ContentEntity = when (this) {
     is Recipe -> ContentEntity(
         id = id,

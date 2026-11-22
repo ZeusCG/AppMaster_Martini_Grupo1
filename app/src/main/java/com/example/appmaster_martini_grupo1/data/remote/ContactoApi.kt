@@ -5,7 +5,6 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-/** Cuerpo que espera JSONPlaceholder para "crear" un post. */
 data class ContactoRequest(
     @SerializedName("title") val title: String,
     @SerializedName("body") val body: String,
@@ -21,7 +20,6 @@ data class ContactoResponse(
 
 interface ContactoApi {
 
-    /** Envía la solicitud de contacto. Responde 201 Created (y no persiste nada en el servidor). */
     @POST("posts")
     suspend fun enviar(@Body request: ContactoRequest): Response<ContactoResponse>
 }

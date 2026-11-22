@@ -67,7 +67,6 @@ class ProfileViewModel(
         _uiState.update { it.copy(userId = userId) }
         val repo = profileRepository ?: return
         viewModelScope.launch {
-            // H-035: si falla la lectura, se avisa en vez de cerrar la app.
             try {
                 val p = repo.getByUserId(userId) ?: return@launch
                 _uiState.update {

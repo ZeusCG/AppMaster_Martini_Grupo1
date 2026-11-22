@@ -1,9 +1,5 @@
 package com.example.appmaster_martini_grupo1.domain
 
-/**
- * Regla de negocio del equipo (no es norma técnica): con humedad alta o calor,
- * el chocolate se trabaja peor. Se usa para dar un consejo al usuario.
- */
 object ConsejoChocolate {
 
     const val AVISO = "Precaución al almacenar y trabajar chocolate"

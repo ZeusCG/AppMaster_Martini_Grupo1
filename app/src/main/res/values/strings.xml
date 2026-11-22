@@ -14,5 +14,17 @@
 
     <!-- Clima: el crédito a Open-Meteo es obligatorio por usar su API. -->
     <string name="weather_title">Condiciones de tu taller hoy</string>
+    <string name="weather_location">Santiago, Chile</string>
     <string name="weather_credit">Weather data by Open-Meteo.com</string>
+    <string name="weather_loading">Cargando clima del taller…</string>
+    <string name="weather_temperature">Temperatura</string>
+    <string name="weather_humidity">Humedad</string>
+    <string name="weather_retry">Reintentar</string>
+    <string name="weather_updated_now">Actualizado a las %1$s</string>
+    <string name="weather_updated_cache">Último dato guardado de las %1$s</string>
+
+    <!-- Gestionar contenido -->
+    <string name="manage_login_required">Inicia sesión para crear, editar o eliminar contenido.</string>
+    <string name="manage_empty">Aún no hay contenido. Crea el primero con el botón de arriba.</string>
+    <string name="manage_empty_readonly">Todavía no hay contenido disponible.</string>
 </resources>

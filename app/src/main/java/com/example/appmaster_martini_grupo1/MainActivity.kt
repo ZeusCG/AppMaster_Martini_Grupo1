@@ -11,7 +11,6 @@ import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1The
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // H-015: recupera la sesión guardada antes de dibujar la UI.
         UserSession.init(applicationContext)
         enableEdgeToEdge()
         setContent {

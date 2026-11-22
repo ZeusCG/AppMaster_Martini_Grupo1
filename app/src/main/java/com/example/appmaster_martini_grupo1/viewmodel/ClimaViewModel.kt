@@ -35,7 +35,6 @@ class ClimaViewModel(
     private val _uiState = MutableStateFlow<ClimaUiState>(ClimaUiState.Loading)
     val uiState: StateFlow<ClimaUiState> = _uiState.asStateFlow()
 
-    /** Carga el clima. Si falla la red usa el último guardado; si no hay, muestra Error. */
     fun load() {
         _uiState.value = ClimaUiState.Loading
         viewModelScope.launch {

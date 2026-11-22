@@ -11,7 +11,6 @@ class ClimaRepository(
     private val climaDao: ClimaDao? = null
 ) {
 
-    /** Consulta la red, guarda el resultado como último clima y lo devuelve. Lanza si falla. */
     suspend fun getClima(): ClimaActual {
         val api = climaApi ?: error("ClimaApi no disponible")
         val respuesta = api.getClima(LATITUD, LONGITUD)
@@ -25,13 +24,11 @@ class ClimaRepository(
         return clima
     }
 
-    /** Último clima guardado (puede ser null si nunca se consultó). */
     suspend fun getUltimoClima(): ClimaActual? =
         climaDao?.get()?.let {
             ClimaActual(temperatura = it.temperatura, humedad = it.humedad, hora = it.hora)
         }
 
-    /** Intenta la red; si falla, cae al último clima guardado (marcado como cache). */
     suspend fun obtenerClima(): ClimaResultado = try {
         ClimaResultado(getClima(), desdeCache = false)
     } catch (e: Exception) {
@@ -40,7 +37,6 @@ class ClimaRepository(
     }
 
     companion object {
-        // Coordenadas fijas de Santiago (no se pide permiso de ubicación).
         const val LATITUD = -33.45
         const val LONGITUD = -70.66
     }

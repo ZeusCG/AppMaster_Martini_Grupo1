@@ -39,10 +39,6 @@ import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.viewmodel.ContactoViewModel
 import com.example.appmaster_martini_grupo1.viewmodel.SendState
 
-/**
- * Pantalla "Contactar a un asesor" (H-006): formulario validado, estados
- * Enviando/Enviado/Error e historial con eliminar y estado (enviada/pendiente).
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactScreen(

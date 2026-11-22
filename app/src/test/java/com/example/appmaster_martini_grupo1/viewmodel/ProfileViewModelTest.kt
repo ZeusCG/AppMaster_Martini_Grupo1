@@ -23,7 +23,6 @@ class ProfileViewModelTest {
 
     private val viewModel = ProfileViewModel()
 
-    // --- Validación (síncrono) ---
 
     @Test
     fun nombreCortoMarcaErrorDeNombre() {
@@ -81,7 +80,6 @@ class ProfileViewModelTest {
         assertNotNull(viewModel.uiState.value)
     }
 
-    // --- Con repositorio mockeado ---
 
     @Test
     fun loadProfile_carga_los_datos() = runTest {

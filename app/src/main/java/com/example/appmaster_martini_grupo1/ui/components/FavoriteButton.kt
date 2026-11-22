@@ -21,10 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 
-/**
- * Corazón de favorito con rebote al marcar y color animado.
- * Reutilizable en la tarjeta del catálogo y en el detalle.
- */
 @Composable
 fun FavoriteButton(
     isFavorite: Boolean,
@@ -34,7 +30,6 @@ fun FavoriteButton(
     inactiveColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     val heartScale = remember { Animatable(1f) }
-    // Evita que el corazón "rebote" al cargar la pantalla; solo al pasar de no-favorito a favorito.
     var wasFavorite by remember { mutableStateOf(isFavorite) }
 
     LaunchedEffect(isFavorite) {

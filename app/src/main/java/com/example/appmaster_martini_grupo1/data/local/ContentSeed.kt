@@ -5,7 +5,6 @@ import com.example.appmaster_martini_grupo1.data.model.Course
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import com.example.appmaster_martini_grupo1.data.model.Video
 
-/** Contenido inicial del catálogo de Master Martini (se carga la primera vez que se crea la BD). */
 object ContentSeed {
 
     val items: List<Content> = listOf(

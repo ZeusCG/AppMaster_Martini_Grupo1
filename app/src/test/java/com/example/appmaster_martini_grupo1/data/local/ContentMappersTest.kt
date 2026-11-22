@@ -7,7 +7,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** H-022/H-026: prueba el mapeo Room<->dominio de los tres tipos y el caso de tipo desconocido. */
 class ContentMappersTest {
 
     @Test

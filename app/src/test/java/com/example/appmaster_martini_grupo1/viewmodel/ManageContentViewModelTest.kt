@@ -128,7 +128,6 @@ class ManageContentViewModelTest {
         assertFalse(items.any { it.id == item.id })
     }
 
-    // --- Con repositorio mockeado (persistencia) ---
 
     private fun repositorioPersistente(): ContentRepository {
         val repository = mockk<ContentRepository>(relaxed = true)

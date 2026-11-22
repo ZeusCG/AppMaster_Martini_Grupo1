@@ -91,7 +91,6 @@ fun CatalogScreen(
                 onSelect = viewModel::onCategorySelected
             )
 
-            // H-040: distinguir cargando / error / vacío real en vez de mostrar siempre "sin resultados".
             when (val state = uiState) {
                 ContentUiState.Loading -> CenteredBox { CircularProgressIndicator() }
                 is ContentUiState.Error -> CenteredBox { Text(state.message) }
@@ -143,7 +142,6 @@ private fun AnimatedCatalogItem(
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        // Retardo corto según la posición (tope 8) para el efecto "en cascada".
         delay((index.coerceAtMost(8) * 45).toLong())
         visible = true
     }

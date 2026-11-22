@@ -58,7 +58,6 @@ class ContentViewModelTest {
 
     @Test
     fun buscar_por_texto_reduce_la_lista() {
-        // H-025: se usa el título de un ítem real en vez de un valor fijo de la semilla.
         val total = viewModel.content.value.size
         val primero = viewModel.content.value.first()
 
@@ -71,7 +70,6 @@ class ContentViewModelTest {
 
     @Test
     fun filtro_por_categoria_muestra_solo_esa_categoria() {
-        // H-025: la categoría se toma de los datos, no de un literal acoplado a la semilla.
         val categoria = viewModel.categories.first()
 
         viewModel.onCategorySelected(categoria)
@@ -132,7 +130,6 @@ class ContentViewModelTest {
         assertEquals(1, vm.content.value.size)
     }
 
-    // H-026: cubre el estado Error de ContentViewModel.observeContent.
     @Test
     fun si_falla_la_observacion_expone_estado_error() = runTest {
         val repository = mockk<ContentRepository>(relaxed = true)
@@ -145,7 +142,6 @@ class ContentViewModelTest {
         assertTrue(vm.uiState.value is ContentUiState.Error)
     }
 
-    // --- Favoritos y CRUD (repositorios mockeados) ---
 
     @Test
     fun loadFavorites_carga_los_ids() = runTest {

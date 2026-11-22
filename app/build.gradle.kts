@@ -69,6 +69,9 @@ android {
     }
     buildFeatures {
         compose = true
+        // Con AGP 9 el BuildConfig no se genera salvo que se active. `RetrofitClient`
+        // usa `BuildConfig.DEBUG` para los logs (H-020), así que hay que habilitarlo.
+        buildConfig = true
     }
 }
 

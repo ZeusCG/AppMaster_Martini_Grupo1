@@ -90,6 +90,6 @@ la base de datos local (Room) para conservar el historial.
 
 ## Evidencia
 
-- `docs/` – capturas del tablero Trello, del reporte de cobertura y del APK firmado + `.jks`.
-- Tablero Trello del proyecto: [agregar enlace]
+- `docs/` – capturas del reporte de cobertura y del APK firmado + `.jks`.
+- Repositorio: https://github.com/ZeusCG/AppMaster_Martini_Grupo1 (commits por integrante).
 - Indicación del docente (sin backend Spring Boot): `docs/indicacion-docente.md`
