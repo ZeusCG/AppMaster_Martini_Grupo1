@@ -147,4 +147,15 @@ class ContentRepositoryTest {
 
         assertTrue(favorites.getFavoriteIds(1L).isEmpty())
     }
+
+    @Test
+    fun get_by_id_con_dao_mapea_la_entidad() = runBlocking {
+        val repository = ContentRepository(FakeContentDao())
+        repository.upsert(receta("r-9"))
+
+        val obtenido = repository.getById("r-9")
+
+        assertEquals("r-9", obtenido?.id)
+        assertEquals("Receta r-9", obtenido?.title)
+    }
 }

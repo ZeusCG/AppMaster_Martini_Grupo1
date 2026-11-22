@@ -10,6 +10,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -130,5 +131,23 @@ class ContactoRepositoryTest {
         assertEquals(SolicitudContacto.ESTADO_ENVIADA, resultado.estado)
         coVerify { api.enviar(any()) }
         coVerify { dao.update(match { it.estado == SolicitudContacto.ESTADO_ENVIADA }) }
+    }
+
+    @Test
+    fun observeHistory_emite_lo_guardado() = runBlocking {
+        val dao = FakeSolicitudDao()
+        val repository = ContactoRepository(FakeContactoApi(Comportamiento.OK), dao)
+        repository.send(userId = 1L, asunto = "a", mensaje = "b")
+
+        val historial = repository.observeHistory(1L).first()
+
+        assertEquals(1, historial.size)
+    }
+
+    @Test
+    fun observeHistory_sin_dao_esta_vacio() = runBlocking {
+        val repository = ContactoRepository()
+
+        assertTrue(repository.observeHistory(1L).first().isEmpty())
     }
 }
