@@ -18,18 +18,14 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,12 +34,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 import com.example.appmaster_martini_grupo1.ui.components.ContentCard
+import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
 import kotlinx.coroutines.delay
 
@@ -58,25 +55,12 @@ fun CatalogScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.loadFavorites() }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Catálogo") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("<")}
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondary
-                )
-            )
-        }
+        topBar = { AppTopBar(title = "Catálogo", onBack = onBack) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -107,30 +91,32 @@ fun CatalogScreen(
                 onSelect = viewModel::onCategorySelected
             )
 
-            if (content.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No encontramos contenido para tu búsqueda")
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    itemsIndexed(content, key = { _, item -> item.id }) { index, item ->
-                        AnimatedCatalogItem(
-                            index = index,
-                            modifier = Modifier.animateItem()
+            // H-040: distinguir cargando / error / vacío real en vez de mostrar siempre "sin resultados".
+            when (val state = uiState) {
+                ContentUiState.Loading -> CenteredBox { CircularProgressIndicator() }
+                is ContentUiState.Error -> CenteredBox { Text(state.message) }
+                is ContentUiState.Success -> {
+                    if (content.isEmpty()) {
+                        CenteredBox { Text("No encontramos contenido para tu búsqueda") }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            ContentCard(
-                                content = item,
-                                onClick = { onItemClick(item.id) },
-                                isFavorite = item.id in favoriteIds,
-                                onToggleFavorite = { viewModel.toggleFavorite(item.id) }
-                            )
+                            itemsIndexed(content, key = { _, item -> item.id }) { index, item ->
+                                AnimatedCatalogItem(
+                                    index = index,
+                                    modifier = Modifier.animateItem()
+                                ) {
+                                    ContentCard(
+                                        content = item,
+                                        onClick = { onItemClick(item.id) },
+                                        isFavorite = item.id in favoriteIds,
+                                        onToggleFavorite = { viewModel.toggleFavorite(item.id) }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -138,6 +124,17 @@ fun CatalogScreen(
         }
     }
 }
+
+@Composable
+private fun CenteredBox(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
+    }
+}
+
 @Composable
 private fun AnimatedCatalogItem(
     index: Int,

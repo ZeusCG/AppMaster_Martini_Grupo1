@@ -1,3 +1,18 @@
 <resources>
-    <string name="app_name">AppMaster_Martini_Grupo1</string>
+    <string name="app_name">Master Martini</string>
+
+    <!-- Home -->
+    <string name="home_welcome">¡Bienvenido!</string>
+    <string name="home_catalog">Ver catálogo</string>
+    <string name="home_manage">Gestionar contenido</string>
+    <string name="home_contact">Contactar a un asesor</string>
+    <string name="home_favorites">Mis favoritos</string>
+    <string name="home_profile">Mi perfil</string>
+    <string name="home_info">Información</string>
+    <string name="action_login">Iniciar sesión</string>
+    <string name="action_logout">Cerrar sesión</string>
+
+    <!-- Clima: el crédito a Open-Meteo es obligatorio por usar su API. -->
+    <string name="weather_title">Condiciones de tu taller hoy</string>
+    <string name="weather_credit">Weather data by Open-Meteo.com</string>
 </resources>

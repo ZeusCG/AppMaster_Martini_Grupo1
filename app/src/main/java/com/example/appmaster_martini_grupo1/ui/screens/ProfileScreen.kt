@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +26,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,8 +34,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +58,7 @@ import com.example.appmaster_martini_grupo1.platform.GalleryResult
 import com.example.appmaster_martini_grupo1.platform.openAppSettings
 import com.example.appmaster_martini_grupo1.platform.rememberBitmapFromUri
 import com.example.appmaster_martini_grupo1.platform.rememberGalleryLauncher
+import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.ui.components.InterestChips
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
@@ -95,6 +94,22 @@ fun ProfileScreen(
 
     val sessionId by UserSession.userId.collectAsStateWithLifecycle()
     val effectiveId = sessionId ?: userId
+
+    // H-008: sin sesión no hay perfil que cargar/guardar (evita el guardado con userId = 0 y su error de FK).
+    if (effectiveId == 0L) {
+        Scaffold(topBar = { AppTopBar(title = "Mi perfil", onBack = onBack) }) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Inicia sesión para ver y guardar tu perfil.")
+            }
+        }
+        return
+    }
 
     LaunchedEffect(effectiveId) {
         viewModel.loadProfile(effectiveId)
@@ -140,21 +155,7 @@ fun ProfileContent(
     onBack: () -> Unit = {}
 ) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Mi perfil") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("<") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondary
-                )
-            )
-        }
+        topBar = { AppTopBar(title = "Mi perfil", onBack = onBack) }
     ) { padding ->
         Column(
             modifier = Modifier

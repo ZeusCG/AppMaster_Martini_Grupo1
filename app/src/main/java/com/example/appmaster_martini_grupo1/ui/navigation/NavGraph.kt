@@ -12,15 +12,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.ui.screens.CatalogScreen
+import com.example.appmaster_martini_grupo1.ui.screens.ContactScreen
 import com.example.appmaster_martini_grupo1.ui.screens.DetailScreen
 import com.example.appmaster_martini_grupo1.ui.screens.FavoritesScreen
 import com.example.appmaster_martini_grupo1.ui.screens.HomeScreen
 import com.example.appmaster_martini_grupo1.ui.screens.InfoScreen
+import com.example.appmaster_martini_grupo1.ui.screens.InterestsSurveyScreen
 import com.example.appmaster_martini_grupo1.ui.screens.LoginScreen
+import com.example.appmaster_martini_grupo1.ui.screens.ManageContentScreen
 import com.example.appmaster_martini_grupo1.ui.screens.ProfileScreen
 import com.example.appmaster_martini_grupo1.ui.screens.RegisterScreen
-import com.example.appmaster_martini_grupo1.ui.screens.ContactScreen
-import com.example.appmaster_martini_grupo1.ui.screens.ManageContentScreen
 
 object Routes {
     const val LOGIN = "login"
@@ -29,22 +30,21 @@ object Routes {
     const val PROFILE = "profile"
     const val CATALOG = "catalog"
     const val FAVORITES = "favorites"
-    const val  INFO = "info"
+    const val INFO = "info"
     const val DETAIL = "detail/{id}"
     const val MANAGE = "manage"
-
     const val CONTACT = "contact"
+    const val INTERESTS = "interests"
 
     fun detail(id: String) = "detail/$id"
-
 }
 
 private const val ANIM_MS = 320
 
 @Composable
 fun AppNavGraph(
-    navController: NavHostController = rememberNavController(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController()
 ) {
     NavHost(
         navController = navController,
@@ -90,9 +90,19 @@ fun AppNavGraph(
         composable(Routes.REGISTER) {
             RegisterScreen(
                 onNavigateBack = { navController.popBackStack() },
+                // H-010: tras registrarse se pasa por la encuesta de intereses antes de volver a Home.
                 onRegisterSuccess = {
-                    navController.popBackStack(Routes.HOME, inclusive = false)
+                    navController.navigate(Routes.INTERESTS) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                    }
                 }
+            )
+        }
+
+        composable(Routes.INTERESTS) {
+            InterestsSurveyScreen(
+                userId = UserSession.userId.value ?: 0L,
+                onDone = { navController.popBackStack(Routes.HOME, inclusive = false) }
             )
         }
 
@@ -105,9 +115,12 @@ fun AppNavGraph(
                 onGoProfile = { navController.navigate(Routes.PROFILE) },
                 onGoInfo = { navController.navigate(Routes.INFO) },
                 onGoLogin = { navController.navigate(Routes.LOGIN) },
+                // H-009: al cerrar sesión se limpia el back stack para que "atrás" no vuelva a Home.
                 onLogout = {
                     UserSession.clear()
-                    navController.navigate(Routes.LOGIN)
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.HOME) { inclusive = true }
+                    }
                 }
             )
         }
@@ -121,7 +134,7 @@ fun AppNavGraph(
         }
 
         composable(Routes.INFO) {
-            InfoScreen(onback = {navController.popBackStack()})
+            InfoScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Routes.PROFILE) {

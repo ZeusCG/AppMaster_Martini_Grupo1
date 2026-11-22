@@ -2,51 +2,63 @@ package com.example.appmaster_martini_grupo1.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InfoScreen(onback: () -> Unit = {}) {
+fun InfoScreen(onBack: () -> Unit = {}) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Información") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onback,
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("<") }
-
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondary
-                )
-            )
-        }
-    ) { innerPadding ->
+        topBar = { AppTopBar(title = "Información", onBack = onBack) }
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxWidth()
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Informacion de la App", style = MaterialTheme.typography.headlineSmall)
-            Text("Aqui va el texto que quieras: version, contacto, creditos, etc"   )
+            Text("Master Martini", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Versión 1.0", style = MaterialTheme.typography.bodyMedium)
+
+            SectionLabel("Qué hace la app")
+            Text(
+                "Entrega recetas, videos técnicos y cursos de Master Martini Chile, y permite guardar perfil, " +
+                        "intereses, favoritos y solicitudes de contacto con un asesor.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            SectionLabel("APIs externas")
+            Text(
+                "Clima del taller: datos de Open-Meteo (GET).\n" +
+                        "Solicitudes de contacto: JSONPlaceholder (POST, demostración; el historial real se guarda en el teléfono).",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            SectionLabel("Créditos")
+            Text("Weather data by Open-Meteo.com", style = MaterialTheme.typography.bodyMedium)
+            Text("App desarrollada por Grupo 1 · DSY1105", style = MaterialTheme.typography.bodyMedium)
         }
     }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold
+    )
 }

@@ -15,15 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +41,7 @@ import com.example.appmaster_martini_grupo1.data.model.Course
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import com.example.appmaster_martini_grupo1.data.model.Video
 import com.example.appmaster_martini_grupo1.platform.rememberBitmapFromUri
+import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 import com.example.appmaster_martini_grupo1.ui.components.FavoriteButton
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
 
@@ -55,7 +52,10 @@ fun DetailScreen(
     onBack: () -> Unit,
     viewModel: ContentViewModel = viewModel(factory = ContentViewModel.factory(LocalContext.current))
 ) {
-    val content = remember(contentId) { viewModel.getContentById(contentId) }
+    // H-007: el contenido se deriva del estado reactivo (Room), no de un `remember`
+    // que se calculaba una sola vez contra la semilla.
+    val items by viewModel.content.collectAsStateWithLifecycle()
+    val content = items.firstOrNull { it.id == contentId }
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.loadFavorites() }
@@ -77,29 +77,16 @@ fun DetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Detalle") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        )
-                    ) { Text("Volver") }
-                },
+            AppTopBar(
+                title = "Detalle",
+                onBack = onBack,
                 actions = {
                     FavoriteButton(
                         isFavorite = contentId in favoriteIds,
                         onToggle = { viewModel.toggleFavorite(contentId) },
                         inactiveColor = MaterialTheme.colorScheme.onSecondary
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSecondary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondary
-                )
+                }
             )
         }
     ) { innerPadding ->
