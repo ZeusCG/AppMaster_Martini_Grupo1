@@ -1,15 +1,39 @@
 package com.example.appmaster_martini_grupo1.data.repository
 
+import com.example.appmaster_martini_grupo1.data.local.ContentDao
 import com.example.appmaster_martini_grupo1.data.local.ContentSeed
+import com.example.appmaster_martini_grupo1.data.local.toContent
+import com.example.appmaster_martini_grupo1.data.local.toEntity
 import com.example.appmaster_martini_grupo1.data.model.Content
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 
-/**
- * Fuente de contenido del catálogo. Por ahora entrega la semilla en memoria;
- * D1.2 lo reemplaza por lectura desde Room (ContentDao).
- */
-class ContentRepository {
+class ContentRepository(
+    private val contentDao: ContentDao? = null
+) {
 
-    fun getContent(): List<Content> = ContentSeed.items
+    /** true cuando hay BD Room detrás (en la app); false en tests sin DAO. */
+    val isPersistent: Boolean get() = contentDao != null
 
-    fun getContentById(id: String): Content? = ContentSeed.items.firstOrNull { it.id == id }
+    /** Contenido inicial en memoria (semilla), disponible al instante antes de que Room emita. */
+    fun seed(): List<Content> = ContentSeed.items
+
+    /** Observa el contenido guardado. Sin DAO (tests) entrega la semilla. */
+    fun observeAll(): Flow<List<Content>> =
+        contentDao?.observeAll()?.map { entities -> entities.map { it.toContent() } }
+            ?: flowOf(ContentSeed.items)
+
+    suspend fun getById(id: String): Content? =
+        contentDao?.getById(id)?.toContent()
+            ?: ContentSeed.items.firstOrNull { it.id == id }
+
+    /** Inserta o actualiza (upsert). */
+    suspend fun upsert(content: Content) {
+        contentDao?.upsert(content.toEntity())
+    }
+
+    suspend fun delete(id: String) {
+        contentDao?.deleteById(id)
+    }
 }
