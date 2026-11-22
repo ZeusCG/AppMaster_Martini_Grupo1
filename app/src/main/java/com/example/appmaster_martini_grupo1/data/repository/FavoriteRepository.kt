@@ -22,4 +22,9 @@ class FavoriteRepository(
     suspend fun remove(userId: Long, contentId: String) {
         favoriteDao?.deleteById(userId, contentId)
     }
+
+    /** Quita todos los favoritos que apuntan a un contenido (al eliminarlo). */
+    suspend fun removeByContentId(contentId: String) {
+        favoriteDao?.deleteByContentId(contentId)
+    }
 }

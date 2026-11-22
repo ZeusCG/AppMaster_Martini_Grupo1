@@ -2,11 +2,14 @@ package com.example.appmaster_martini_grupo1.data.repository
 
 import com.example.appmaster_martini_grupo1.data.local.ContentDao
 import com.example.appmaster_martini_grupo1.data.local.ContentEntity
+import com.example.appmaster_martini_grupo1.data.local.FavoriteDao
 import com.example.appmaster_martini_grupo1.data.model.Content
+import com.example.appmaster_martini_grupo1.data.model.Favorite
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -45,6 +48,30 @@ class ContentRepositoryTest {
         ingredients = listOf("Chocolate"),
         steps = listOf("Derretir")
     )
+
+    private class FakeFavoriteDao : FavoriteDao {
+        private val items = MutableStateFlow<List<Favorite>>(emptyList())
+
+        override suspend fun insert(favorite: Favorite) {
+            if (items.value.none { it.userId == favorite.userId && it.contentId == favorite.contentId }) {
+                items.value = items.value + favorite
+            }
+        }
+
+        override suspend fun deleteById(userId: Long, contentId: String) {
+            items.value = items.value.filterNot { it.userId == userId && it.contentId == contentId }
+        }
+
+        override suspend fun deleteByContentId(contentId: String) {
+            items.value = items.value.filterNot { it.contentId == contentId }
+        }
+
+        override fun observeFavoriteIds(userId: Long): Flow<List<String>> =
+            items.map { list -> list.filter { it.userId == userId }.map { it.contentId } }
+
+        override suspend fun getFavoriteIds(userId: Long): List<String> =
+            items.value.filter { it.userId == userId }.map { it.contentId }
+    }
 
     @Test
     fun sin_dao_entrega_la_semilla() = runBlocking {
@@ -94,5 +121,18 @@ class ContentRepositoryTest {
         val repository = ContentRepository(FakeContentDao())
 
         assertNull(repository.getById("no-existe"))
+    }
+
+    @Test
+    fun al_eliminar_contenido_se_quitan_sus_favoritos() = runBlocking {
+        val favorites = FavoriteRepository(FakeFavoriteDao())
+        val repository = ContentRepository(FakeContentDao(), favorites)
+        repository.upsert(receta("r-1"))
+        favorites.add(1L, "r-1")
+        assertTrue(favorites.getFavoriteIds(1L).contains("r-1"))
+
+        repository.delete("r-1")
+
+        assertTrue(favorites.getFavoriteIds(1L).isEmpty())
     }
 }
