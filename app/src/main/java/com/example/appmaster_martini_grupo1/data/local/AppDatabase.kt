@@ -4,13 +4,18 @@ import android.content.Context
 import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
+import androidx.sqlite.SQLiteConnection
 import com.example.appmaster_martini_grupo1.data.model.Favorite
 import com.example.appmaster_martini_grupo1.data.model.Profile
 import com.example.appmaster_martini_grupo1.data.model.User
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 @Database(
-    entities = [User::class, Profile::class, Favorite::class],
-    version = 4,
+    entities = [User::class, Profile::class, Favorite::class, ContentEntity::class],
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -18,10 +23,14 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun profileDao(): ProfileDao
     abstract fun favoriteDao(): FavoriteDao
+    abstract fun contentDao(): ContentDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        // Para sembrar el catálogo sin bloquear la creación de la BD.
+        private val seedScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
         fun getInstance(context: Context): AppDatabase =
             INSTANCE ?: synchronized(this) {
@@ -31,6 +40,17 @@ abstract class AppDatabase : RoomDatabase() {
                     "appmaster_martini.db"
                 )
                     .fallbackToDestructiveMigration()
+                    .addCallback(object : RoomDatabase.Callback() {
+                        override suspend fun onCreate(connection: SQLiteConnection) {
+                            super.onCreate(connection)
+                            // Se ejecuta cuando la BD se crea por primera vez (o tras migración destructiva).
+                            seedScope.launch {
+                                INSTANCE?.contentDao()?.insertAll(
+                                    ContentSeed.items.map { it.toEntity() }
+                                )
+                            }
+                        }
+                    })
                     .build()
                     .also { INSTANCE = it }
             }
