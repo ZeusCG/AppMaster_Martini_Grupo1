@@ -7,10 +7,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.appmaster_martini_grupo1.data.local.AppDatabase
-import com.example.appmaster_martini_grupo1.data.local.ProfileDao
-import com.example.appmaster_martini_grupo1.data.local.UserDao
 import com.example.appmaster_martini_grupo1.data.model.Profile
 import com.example.appmaster_martini_grupo1.data.model.User
+import com.example.appmaster_martini_grupo1.data.repository.ProfileRepository
+import com.example.appmaster_martini_grupo1.data.repository.UserRepository
 import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.domain.Validators
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,8 +39,8 @@ data class AuthUiState(
 )
 
 class AuthViewModel(
-    private val userDao: UserDao? = null,
-    private val profileDao: ProfileDao? = null
+    private val userRepository: UserRepository? = null,
+    private val profileRepository: ProfileRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -85,14 +85,14 @@ class AuthViewModel(
 
     fun onLoginClick() {
         if (!validateLogin()) return
-        val dao = userDao
-        if (dao == null) {
+        val repo = userRepository
+        if (repo == null) {
             _uiState.update { it.copy(authError = "No se pudo conectar con el almacenamiento local. Intenta nuevamente.") }
             return
         }
         _uiState.update { it.copy(isLoading = true, authError = null) }
         viewModelScope.launch {
-            val user = dao.authenticate(_uiState.value.email.trim(), _uiState.value.password)
+            val user = repo.authenticate(_uiState.value.email.trim(), _uiState.value.password)
             if (user == null) {
                 _uiState.update { it.copy(isLoading = false, authError = "Correo o contraseña incorrectos") }
             } else {
@@ -104,9 +104,9 @@ class AuthViewModel(
 
     fun onRegisterClick() {
         if (!validateRegister()) return
-        val userDaoRef = userDao
-        val profileDaoRef = profileDao
-        if (userDaoRef == null || profileDaoRef == null) {
+        val userRepo = userRepository
+        val profileRepo = profileRepository
+        if (userRepo == null || profileRepo == null) {
             _uiState.update { it.copy(authError = "No se pudo conectar con el almacenamiento local. Intenta nuevamente.") }
             return
         }
@@ -114,7 +114,7 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 val s = _uiState.value
-                val newId = userDaoRef.insert(
+                val newId = userRepo.register(
                     User(
                         name = s.name.trim(),
                         email = s.email.trim(),
@@ -123,7 +123,7 @@ class AuthViewModel(
                         rut = s.rut.trim()
                     )
                 )
-                profileDaoRef.upsert(
+                profileRepo.save(
                     Profile(
                         userId = newId,
                         displayName = s.name.trim(),
@@ -143,7 +143,10 @@ class AuthViewModel(
         fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val db = AppDatabase.getInstance(context.applicationContext)
-                AuthViewModel(userDao = db.userDao(), profileDao = db.profileDao())
+                AuthViewModel(
+                    userRepository = UserRepository(db.userDao()),
+                    profileRepository = ProfileRepository(db.profileDao())
+                )
             }
         }
     }
