@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -65,6 +64,7 @@ import com.example.appmaster_martini_grupo1.ui.components.InterestChips
 import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1Theme
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ProfileViewModel
+import com.example.appmaster_martini_grupo1.ui.components.BackButton
 
 
 @Composable
@@ -143,10 +143,7 @@ fun ProfileContent(
         topBar = {
             TopAppBar(
                 title = { Text("Mi perfil") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("<") }
+                navigationIcon = { BackButton(onClick = onBack)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
