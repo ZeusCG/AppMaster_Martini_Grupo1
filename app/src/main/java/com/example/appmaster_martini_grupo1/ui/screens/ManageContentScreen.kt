@@ -286,7 +286,7 @@ private fun MultilineField(
         minLines = 3,
         isError = error != null,
         supportingText = if (error != null) {
-            { Text(error) }
+            { Text(error.orEmpty()) }
         } else null
     )
 }
