@@ -11,7 +11,7 @@ registrar perfil, intereses, favoritos y solicitudes de contacto con un asesor.
 | Integrante | Rol | Capa principal |
 |---|---|---|
 | Zeus Chavez | UI | `ui/`, `platform/`, `res/`, README y `docs/` |
-| Jhoan "Sebastian" Fernandez | DATOS | `data/`, `domain/`, `viewmodel/`, pruebas, Gradle y APK firmado |
+| Jhoan Sebastian Fernandez | DATOS | `data/`, `domain/`, `viewmodel/`, pruebas, Gradle y APK firmado |
 
 ### Mapeo de commits
 En el historial de Git aparecen más de un alias por persona (máquinas distintas). El mapeo es:
