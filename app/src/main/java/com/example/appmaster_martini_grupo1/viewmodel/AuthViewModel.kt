@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.room3.RoomDatabase
+import androidx.room3.withWriteTransaction
 import com.example.appmaster_martini_grupo1.data.local.AppDatabase
 import com.example.appmaster_martini_grupo1.data.model.Profile
 import com.example.appmaster_martini_grupo1.data.model.User
@@ -40,7 +42,8 @@ data class AuthUiState(
 
 class AuthViewModel(
     private val userRepository: UserRepository? = null,
-    private val profileRepository: ProfileRepository? = null
+    private val profileRepository: ProfileRepository? = null,
+    private val database: RoomDatabase? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -92,12 +95,19 @@ class AuthViewModel(
         }
         _uiState.update { it.copy(isLoading = true, authError = null) }
         viewModelScope.launch {
-            val user = repo.authenticate(_uiState.value.email.trim(), _uiState.value.password)
-            if (user == null) {
-                _uiState.update { it.copy(isLoading = false, authError = "Correo o contraseña incorrectos") }
-            } else {
-                UserSession.set(user.id)
-                _uiState.update { it.copy(isLoading = false, isLoggedIn = true, userId = user.id) }
+            // H-035: sin try/catch, una excepción de la BD cerraba la app.
+            try {
+                val user = repo.authenticate(_uiState.value.email.trim(), _uiState.value.password)
+                if (user == null) {
+                    _uiState.update { it.copy(isLoading = false, authError = "Correo o contraseña incorrectos") }
+                } else {
+                    UserSession.set(user.id)
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, userId = user.id) }
+                }
+            } catch (_: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, authError = "No se pudo iniciar sesión. Intenta nuevamente.")
+                }
             }
         }
     }
@@ -114,27 +124,49 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 val s = _uiState.value
-                val newId = userRepo.register(
-                    User(
-                        name = s.name.trim(),
-                        email = s.email.trim(),
-                        password = s.password,
-                        phone = s.phone.trim(),
-                        rut = s.rut.trim()
-                    )
+                val newUser = User(
+                    name = s.name.trim(),
+                    email = s.email.trim(),
+                    password = s.password,
+                    phone = s.phone.trim(),
+                    rut = s.rut.trim()
                 )
-                profileRepo.save(
-                    Profile(
-                        userId = newId,
-                        displayName = s.name.trim(),
-                        email = s.email.trim(),
-                        phone = s.phone.trim(),
-                    )
+                fun perfilDe(id: Long) = Profile(
+                    userId = id,
+                    displayName = s.name.trim(),
+                    email = s.email.trim(),
+                    phone = s.phone.trim(),
                 )
+                val db = database
+                // El hash se calcula ANTES de la transacción (evita cambiar de dispatcher dentro de ella).
+                val hashed = userRepo.hashPassword(newUser.password)
+                // H-017: usuario y perfil se guardan en una sola transacción (todo o nada).
+                val newId = if (db != null) {
+                    db.withWriteTransaction {
+                        val id = userRepo.insertWithHash(newUser, hashed)
+                        profileRepo.save(perfilDe(id))
+                        id
+                    }
+                } else {
+                    val id = userRepo.insertWithHash(newUser, hashed)
+                    profileRepo.save(perfilDe(id))
+                    id
+                }
                 UserSession.set(newId)
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true, userId = newId) }
-            } catch (_: Exception) {
-                _uiState.update { it.copy(isLoading = false, authError = "No se pudo crear la cuenta. Revisa los datos e intenta nuevamente.") }
+            } catch (e: Exception) {
+                // H-012: el índice UNIQUE del email produce un error de constraint.
+                val duplicado = e.message?.contains("UNIQUE", ignoreCase = true) == true
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        authError = if (duplicado) {
+                            "Ese correo ya está registrado"
+                        } else {
+                            "No se pudo crear la cuenta. Revisa los datos e intenta nuevamente."
+                        }
+                    )
+                }
             }
         }
     }
@@ -145,7 +177,8 @@ class AuthViewModel(
                 val db = AppDatabase.getInstance(context.applicationContext)
                 AuthViewModel(
                     userRepository = UserRepository(db.userDao()),
-                    profileRepository = ProfileRepository(db.profileDao())
+                    profileRepository = ProfileRepository(db.profileDao()),
+                    database = db
                 )
             }
         }

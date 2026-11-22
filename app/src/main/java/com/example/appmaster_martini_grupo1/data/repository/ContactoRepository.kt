@@ -28,21 +28,27 @@ class ContactoRepository(
      */
     suspend fun send(userId: Long, asunto: String, mensaje: String): SolicitudContacto {
         val pendiente = SolicitudContacto(userId = userId, asunto = asunto, mensaje = mensaje)
-        val id = solicitudDao?.insert(pendiente) ?: 0L
-        val guardada = pendiente.copy(id = id)
-
-        val api = contactoApi ?: return guardada
         return try {
-            val response = api.enviar(ContactoRequest(title = asunto, body = mensaje, userId = userId))
-            if (response.isSuccessful) {
-                val enviada = guardada.copy(estado = SolicitudContacto.ESTADO_ENVIADA)
-                solicitudDao?.update(enviada)
-                enviada
-            } else {
+            // H-035: el guardado local también va dentro del try (antes un fallo aquí no se capturaba).
+            val id = solicitudDao?.insert(pendiente) ?: 0L
+            val guardada = pendiente.copy(id = id)
+
+            val api = contactoApi
+            if (api == null) {
                 guardada
+            } else {
+                val response = api.enviar(ContactoRequest(title = asunto, body = mensaje, userId = userId))
+                if (response.isSuccessful) {
+                    val enviada = guardada.copy(estado = SolicitudContacto.ESTADO_ENVIADA)
+                    solicitudDao?.update(enviada)
+                    enviada
+                } else {
+                    guardada
+                }
             }
         } catch (_: Exception) {
-            guardada
+            // Si falla incluso el guardado local, se devuelve la solicitud "pendiente" en memoria.
+            pendiente
         }
     }
 

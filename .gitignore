@@ -1,12 +1,15 @@
 *.iml
 .gradle
+
+# Credenciales de firma: NO se suben. La llave release/appmaster.jks SI se sube.
+keystore.properties
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+
+# H-032: configuración de la máquina (antes estaba rastreada por error).
+.idea/
+
+# Reporte interno de pruebas: no es parte del entregable.
+REPORTE_TESTS.md
 .DS_Store
 /build
 /captures

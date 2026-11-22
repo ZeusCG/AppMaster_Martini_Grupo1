@@ -1,10 +1,21 @@
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     jacoco
+}
+
+// Firma del APK release (H-027). Las credenciales viven en keystore.properties,
+// que NO se sube al repo; la llave release/appmaster.jks SI se sube.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        FileInputStream(keystorePropertiesFile).use { load(it) }
+    }
 }
 
 android {
@@ -23,9 +34,27 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        // Solo si existe keystore.properties; así un clon sin credenciales igual
+        // configura el proyecto (genera APK sin firmar) y no rompe el build.
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             optimization {
+                // H-028: se deja desactivada a propósito. Activar R8/minify exige reglas `keep`
+                // para Room/Retrofit/Gson/Compose y no se puede verificar en este entorno;
+                // se explica en la defensa (el APK pesa más, pero es reproducible y no arriesga reflexión).
                 enable = false
             }
         }
@@ -56,11 +85,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.camera.view)
+    implementation(libs.androidx.camera.view)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,7 +100,6 @@ dependencies {
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
@@ -96,7 +123,10 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         // El objetivo de la rúbrica es la LÓGICA (ViewModel / Repository / domain):
         "**/ui/**",
         "**/platform/**",
-        "**/data/local/**",
+        // H-022: se excluyen solo los DAO y las entidades (código de Room), no los mappers.
+        // Así el mapeo Room<->dominio (ContentMappers, ContentSeed) sí cuenta y se prueba.
+        "**/data/local/**Dao*",
+        "**/data/local/*Entity*",
         "**/MainActivity*"
     )
     val buildDir = layout.buildDirectory.get().asFile

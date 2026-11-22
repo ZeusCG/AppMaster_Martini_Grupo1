@@ -115,7 +115,9 @@ class AuthViewModelTest {
     fun registro_exitoso_crea_usuario_y_perfil() = runTest {
         val userRepository = mockk<UserRepository>()
         val profileRepository = mockk<ProfileRepository>(relaxed = true)
-        coEvery { userRepository.register(any()) } returns 1L
+        // El registro ahora hashea fuera de la transacción y luego inserta (H-013/H-017).
+        coEvery { userRepository.hashPassword(any()) } returns "hash"
+        coEvery { userRepository.insertWithHash(any(), any()) } returns 1L
         coEvery { profileRepository.save(any()) } just Runs
         val vm = AuthViewModel(userRepository, profileRepository)
         vm.onNameChange("Ana")
@@ -126,7 +128,7 @@ class AuthViewModelTest {
         vm.onRegisterClick()
 
         assertTrue(vm.uiState.value.isLoggedIn)
-        coVerify { userRepository.register(any()) }
+        coVerify { userRepository.insertWithHash(any(), "hash") }
         coVerify { profileRepository.save(any()) }
     }
 }

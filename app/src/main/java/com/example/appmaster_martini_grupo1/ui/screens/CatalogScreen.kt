@@ -23,12 +23,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.appmaster_martini_grupo1.ui.components.BackButton
+import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 import com.example.appmaster_martini_grupo1.ui.components.ContentCard
 import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
@@ -54,25 +51,16 @@ fun CatalogScreen(
     onBack: () -> Unit = {},
     viewModel: ContentViewModel = viewModel(factory = ContentViewModel.factory(LocalContext.current))
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val content by viewModel.content.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.loadFavorites() }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Catálogo") },
-                navigationIcon = { BackButton(onClick = onBack) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.onSecondary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSecondary
-                )
-            )
-        }
+        topBar = { AppTopBar(title = "Catálogo", onBack = onBack) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -103,46 +91,20 @@ fun CatalogScreen(
                 onSelect = viewModel::onCategorySelected
             )
 
+            // H-040: distinguir cargando / error / vacío real en vez de mostrar siempre "sin resultados".
             when (val state = uiState) {
-                is ContentUiState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                is ContentUiState.Error -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = state.message,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-
+                ContentUiState.Loading -> CenteredBox { CircularProgressIndicator() }
+                is ContentUiState.Error -> CenteredBox { Text(state.message) }
                 is ContentUiState.Success -> {
-                    if (state.items.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No encontramos contenido para tu búsqueda")
-                        }
+                    if (content.isEmpty()) {
+                        CenteredBox { Text("No encontramos contenido para tu búsqueda") }
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            itemsIndexed(state.items, key = { _, item -> item.id }) { index, item ->
+                            itemsIndexed(content, key = { _, item -> item.id }) { index, item ->
                                 AnimatedCatalogItem(
                                     index = index,
                                     modifier = Modifier.animateItem()
@@ -160,6 +122,16 @@ fun CatalogScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CenteredBox(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
     }
 }
 
