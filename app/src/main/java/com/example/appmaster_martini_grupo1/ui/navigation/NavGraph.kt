@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.appmaster_martini_grupo1.ui.screens.InterestsSurveyScreen
 import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.ui.screens.CatalogScreen
 import com.example.appmaster_martini_grupo1.ui.screens.DetailScreen
@@ -32,8 +33,9 @@ object Routes {
     const val  INFO = "info"
     const val DETAIL = "detail/{id}"
     const val MANAGE = "manage"
-
     const val CONTACT = "contact"
+
+    const val SURVEY = "survey"
 
     fun detail(id: String) = "detail/$id"
 
@@ -63,7 +65,7 @@ fun AppNavGraph(
                 tween(ANIM_MS)
             ) + fadeOut(tween(ANIM_MS))
         },
-        // Volver (pop): al revés.
+
         popEnterTransition = {
             slideIntoContainer(
                 AnimatedContentTransitionScope.SlideDirection.Right,
@@ -91,8 +93,17 @@ fun AppNavGraph(
             RegisterScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onRegisterSuccess = {
-                    navController.popBackStack(Routes.HOME, inclusive = false)
+                    navController.navigate(Routes.SURVEY) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
                 }
+            )
+        }
+
+        composable(Routes.SURVEY) {
+            InterestsSurveyScreen(
+                userId = UserSession.userId.value ?: 0L,
+                onDone = { navController.popBackStack(Routes.HOME, inclusive = false) }
             )
         }
 

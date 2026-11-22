@@ -35,7 +35,6 @@ import com.example.appmaster_martini_grupo1.ui.theme.AppMaster_Martini_Grupo1The
 import com.example.appmaster_martini_grupo1.viewmodel.ClimaUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ClimaViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onGoCatalog: () -> Unit = {},
