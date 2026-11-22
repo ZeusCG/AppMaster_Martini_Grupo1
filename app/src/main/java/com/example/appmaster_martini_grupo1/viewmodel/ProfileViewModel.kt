@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.appmaster_martini_grupo1.data.local.AppDatabase
-import com.example.appmaster_martini_grupo1.data.local.ProfileDao
 import com.example.appmaster_martini_grupo1.data.model.Profile
+import com.example.appmaster_martini_grupo1.data.repository.ProfileRepository
 import com.example.appmaster_martini_grupo1.domain.Validators
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +33,7 @@ data class ProfileUiState(
 )
 
 class ProfileViewModel(
-    private val profileDao: ProfileDao? = null
+    private val profileRepository: ProfileRepository? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -65,9 +65,9 @@ class ProfileViewModel(
 
     fun loadProfile(userId: Long) {
         _uiState.update { it.copy(userId = userId) }
-        val dao = profileDao ?: return
+        val repo = profileRepository ?: return
         viewModelScope.launch {
-            val p = dao.getByUserId(userId) ?: return@launch
+            val p = repo.getByUserId(userId) ?: return@launch
             _uiState.update {
                 it.copy(
                     displayName = p.displayName,
@@ -91,8 +91,8 @@ class ProfileViewModel(
 
     fun saveProfile() {
         if (!validate()) return
-        val dao = profileDao
-        if (dao == null) {
+        val repo = profileRepository
+        if (repo == null) {
             _uiState.update { it.copy(error = "No se pudo conectar con el almacenamiento local. Intenta nuevamente.") }
             return
         }
@@ -100,7 +100,7 @@ class ProfileViewModel(
         viewModelScope.launch {
             try {
                 val s = _uiState.value
-                dao.upsert(
+                repo.save(
                     Profile(
                         userId = s.userId,
                         displayName = s.displayName.trim(),
@@ -124,7 +124,7 @@ class ProfileViewModel(
         fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val db = AppDatabase.getInstance(context.applicationContext)
-                ProfileViewModel(profileDao = db.profileDao())
+                ProfileViewModel(profileRepository = ProfileRepository(db.profileDao()))
             }
         }
     }
