@@ -1,13 +1,25 @@
 package com.example.appmaster_martini_grupo1.viewmodel
 
+import com.example.appmaster_martini_grupo1.MainDispatcherRule
+import com.example.appmaster_martini_grupo1.data.model.Content
+import com.example.appmaster_martini_grupo1.data.repository.ContentRepository
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class ManageContentViewModelTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private val viewModel = ManageContentViewModel()
 
@@ -114,5 +126,38 @@ class ManageContentViewModelTest {
         val items = viewModel.uiState.value.items
         assertEquals(total - 1, items.size)
         assertFalse(items.any { it.id == item.id })
+    }
+
+    // --- Con repositorio mockeado (persistencia) ---
+
+    private fun repositorioPersistente(): ContentRepository {
+        val repository = mockk<ContentRepository>(relaxed = true)
+        every { repository.isPersistent } returns true
+        every { repository.seed() } returns emptyList()
+        every { repository.observeAll() } returns flowOf(emptyList<Content>())
+        return repository
+    }
+
+    @Test
+    fun save_persiste_en_el_repositorio() = runTest {
+        val repository = repositorioPersistente()
+        val vm = ManageContentViewModel(repository)
+        vm.startCreate()
+        vm.onFieldChange(ContentField.TITLE, "Torta")
+        vm.onFieldChange(ContentField.CATEGORY, "Postres")
+
+        vm.save()
+
+        coVerify { repository.upsert(any()) }
+    }
+
+    @Test
+    fun delete_llama_al_repositorio() = runTest {
+        val repository = repositorioPersistente()
+        val vm = ManageContentViewModel(repository)
+
+        vm.delete("x-1")
+
+        coVerify { repository.delete("x-1") }
     }
 }

@@ -2,6 +2,10 @@ package com.example.appmaster_martini_grupo1.data.repository
 
 import com.example.appmaster_martini_grupo1.data.local.UserDao
 import com.example.appmaster_martini_grupo1.data.model.User
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.match
+import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
@@ -61,6 +65,18 @@ class UserRepositoryTest {
         repository.register(User(name = "Ana", email = "ana@test.cl", password = "Martini2026"))
 
         assertNull(repository.authenticate("ana@test.cl", "ClaveMala1"))
+    }
+
+    @Test
+    fun register_hashea_antes_de_insertar_con_el_dao() = runBlocking {
+        val dao = mockk<UserDao>()
+        coEvery { dao.insert(any()) } returns 7L
+        val repository = UserRepository(dao)
+
+        val id = repository.register(User(name = "Ana", email = "ana@test.cl", password = "Martini2026"))
+
+        assertEquals(7L, id)
+        coVerify { dao.insert(match { it.password != "Martini2026" && it.email == "ana@test.cl" }) }
     }
 
     @Test

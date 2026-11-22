@@ -6,6 +6,8 @@ import com.example.appmaster_martini_grupo1.data.local.FavoriteDao
 import com.example.appmaster_martini_grupo1.data.model.Content
 import com.example.appmaster_martini_grupo1.data.model.Favorite
 import com.example.appmaster_martini_grupo1.data.model.Recipe
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -121,6 +123,16 @@ class ContentRepositoryTest {
         val repository = ContentRepository(FakeContentDao())
 
         assertNull(repository.getById("no-existe"))
+    }
+
+    @Test
+    fun delete_delega_en_el_dao() = runBlocking {
+        val dao = mockk<ContentDao>(relaxed = true)
+        val repository = ContentRepository(dao)
+
+        repository.delete("r-1")
+
+        coVerify { dao.deleteById("r-1") }
     }
 
     @Test

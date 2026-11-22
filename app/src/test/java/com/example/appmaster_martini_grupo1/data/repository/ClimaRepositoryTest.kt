@@ -5,6 +5,9 @@ import com.example.appmaster_martini_grupo1.data.local.ClimaEntity
 import com.example.appmaster_martini_grupo1.data.remote.ClimaApi
 import com.example.appmaster_martini_grupo1.data.remote.ClimaCurrent
 import com.example.appmaster_martini_grupo1.data.remote.ClimaResponse
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -115,5 +118,17 @@ class ClimaRepositoryTest {
         val repository = ClimaRepository(FakeClimaApi(respuestaOk()), FakeClimaDao())
 
         assertNull(repository.getUltimoClima())
+    }
+
+    @Test
+    fun consulta_a_traves_del_api_con_mockk() = runBlocking {
+        val api = mockk<ClimaApi>()
+        coEvery { api.getClima(any(), any()) } returns respuestaOk()
+        val repository = ClimaRepository(api)
+
+        val clima = repository.getClima()
+
+        assertEquals(15.5, clima.temperatura, 0.0)
+        coVerify { api.getClima(any(), any()) }
     }
 }

@@ -1,13 +1,25 @@
 package com.example.appmaster_martini_grupo1.viewmodel.ContentViewModelTest
 
+import com.example.appmaster_martini_grupo1.MainDispatcherRule
 import com.example.appmaster_martini_grupo1.data.model.Recipe
+import com.example.appmaster_martini_grupo1.data.repository.ContentRepository
+import com.example.appmaster_martini_grupo1.data.repository.FavoriteRepository
+import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 class ContentViewModelTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
 
     private val viewModel = ContentViewModel()
 
@@ -84,5 +96,24 @@ class ContentViewModelTest {
     fun favoritos_inician_vacios() {
         assertTrue(viewModel.favoriteIds.value.isEmpty())
         assertFalse(viewModel.isFavorite("recipe-001"))
+    }
+
+    @Test
+    fun con_repositorio_persistente_expone_success() = runTest {
+        val items = listOf(
+            Recipe(
+                id = "r-1", title = "Receta", description = "d", category = "Recetas",
+                portions = 1, ingredients = listOf("a"), steps = listOf("b")
+            )
+        )
+        val repository = mockk<ContentRepository>(relaxed = true)
+        every { repository.isPersistent } returns true
+        every { repository.seed() } returns emptyList()
+        every { repository.observeAll() } returns flowOf(items)
+
+        val vm = ContentViewModel(repository, FavoriteRepository())
+
+        assertTrue(vm.uiState.value is ContentUiState.Success)
+        assertEquals(1, vm.content.value.size)
     }
 }
