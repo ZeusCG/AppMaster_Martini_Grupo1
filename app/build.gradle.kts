@@ -52,6 +52,9 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
             optimization {
+                // H-028: se deja desactivada a propósito. Activar R8/minify exige reglas `keep`
+                // para Room/Retrofit/Gson/Compose y no se puede verificar en este entorno;
+                // se explica en la defensa (el APK pesa más, pero es reproducible y no arriesga reflexión).
                 enable = false
             }
         }
@@ -82,7 +85,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.camera.view)
+    implementation(libs.androidx.camera.view)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -98,7 +101,6 @@ dependencies {
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor)
@@ -122,7 +124,10 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         // El objetivo de la rúbrica es la LÓGICA (ViewModel / Repository / domain):
         "**/ui/**",
         "**/platform/**",
-        "**/data/local/**",
+        // H-022: se excluyen solo los DAO y las entidades (código de Room), no los mappers.
+        // Así el mapeo Room<->dominio (ContentMappers, ContentSeed) sí cuenta y se prueba.
+        "**/data/local/**Dao*",
+        "**/data/local/*Entity*",
         "**/MainActivity*"
     )
     val buildDir = layout.buildDirectory.get().asFile
