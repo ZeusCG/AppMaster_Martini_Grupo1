@@ -16,14 +16,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+sealed interface ContentUiState {
+    data object Loading : ContentUiState
+    data class Success(val items: List<Content>) : ContentUiState
+    data class Error(val message: String) : ContentUiState
+}
+
 class ContentViewModel(
     private val repository: ContentRepository = ContentRepository(),
     private val favoriteRepository: FavoriteRepository = FavoriteRepository()
 ) : ViewModel() {
 
-    private val allContent: List<Content> = repository.getContent()
+    // Última lista completa (de Room o, en tests, de la semilla en memoria).
+    private var allContent: List<Content> = repository.seed()
 
-    private val _content = MutableStateFlow(allContent)
+    private val _uiState = MutableStateFlow<ContentUiState>(ContentUiState.Loading)
+    val uiState: StateFlow<ContentUiState> = _uiState.asStateFlow()
+
+    private val _content = MutableStateFlow<List<Content>>(emptyList())
     val content: StateFlow<List<Content>> = _content.asStateFlow()
 
     private val _query = MutableStateFlow("")
@@ -32,13 +42,34 @@ class ContentViewModel(
     private val _selectedCategory = MutableStateFlow<String?>(null)
     val selectedCategory: StateFlow<String?> = _selectedCategory.asStateFlow()
 
-    val categories: List<String> = allContent.map { it.category }.distinct().sorted()
+    // Se calcula al vuelo: cuando `content` cambia, la pantalla se recompone y las lee actualizadas.
+    val categories: List<String>
+        get() = allContent.map { it.category }.distinct().sorted()
 
     private val _favoriteIds = MutableStateFlow<Set<String>>(emptySet())
     val favoriteIds: StateFlow<Set<String>> = _favoriteIds.asStateFlow()
 
     init {
         applyFilters()
+        if (repository.isPersistent) {
+            observeContent()
+        } else {
+            _uiState.value = ContentUiState.Success(_content.value)
+        }
+    }
+
+    private fun observeContent() {
+        viewModelScope.launch {
+            try {
+                repository.observeAll().collect { items ->
+                    allContent = items
+                    applyFilters()
+                    _uiState.value = ContentUiState.Success(_content.value)
+                }
+            } catch (_: Exception) {
+                _uiState.value = ContentUiState.Error("No se pudo cargar el catálogo.")
+            }
+        }
     }
 
     fun onQueryChange(value: String) {
@@ -54,12 +85,16 @@ class ContentViewModel(
     private fun applyFilters() {
         val text = _query.value.trim().lowercase()
         val category = _selectedCategory.value
-        _content.value = allContent.filter { item ->
+        val filtered = allContent.filter { item ->
             val matchesText = text.isEmpty() ||
                     item.title.lowercase().contains(text) ||
                     item.description.lowercase().contains(text)
             val matchesCategory = category == null || item.category == category
             matchesText && matchesCategory
+        }
+        _content.value = filtered
+        if (_uiState.value is ContentUiState.Success) {
+            _uiState.value = ContentUiState.Success(filtered)
         }
     }
 
@@ -86,13 +121,27 @@ class ContentViewModel(
         }
     }
 
-    fun getContentById(id: String): Content? = repository.getContentById(id)
+    /** Búsqueda síncrona sobre la lista ya cargada (la usa la pantalla de detalle). */
+    fun getContentById(id: String): Content? = allContent.firstOrNull { it.id == id }
+
+    /** Inserta o actualiza contenido (lo usará la pantalla de gestión, D1.3). */
+    fun saveContent(content: Content) {
+        viewModelScope.launch { repository.upsert(content) }
+    }
+
+    /** Elimina contenido por id (lo usará la pantalla de gestión, D1.3). */
+    fun deleteContent(id: String) {
+        viewModelScope.launch { repository.delete(id) }
+    }
 
     companion object {
         fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                val favoriteDao = AppDatabase.getInstance(context.applicationContext).favoriteDao()
-                ContentViewModel(favoriteRepository = FavoriteRepository(favoriteDao))
+                val db = AppDatabase.getInstance(context.applicationContext)
+                ContentViewModel(
+                    repository = ContentRepository(db.contentDao()),
+                    favoriteRepository = FavoriteRepository(db.favoriteDao())
+                )
             }
         }
     }

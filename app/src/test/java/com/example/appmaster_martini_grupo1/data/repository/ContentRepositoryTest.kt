@@ -1,42 +1,98 @@
 package com.example.appmaster_martini_grupo1.data.repository
 
+import com.example.appmaster_martini_grupo1.data.local.ContentDao
+import com.example.appmaster_martini_grupo1.data.local.ContentEntity
+import com.example.appmaster_martini_grupo1.data.model.Content
+import com.example.appmaster_martini_grupo1.data.model.Recipe
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ContentRepositoryTest {
 
-    private val repository = ContentRepository()
+    private class FakeContentDao : ContentDao {
+        private val items = MutableStateFlow<List<ContentEntity>>(emptyList())
+
+        override fun observeAll(): Flow<List<ContentEntity>> = items
+        override suspend fun getAll(): List<ContentEntity> = items.value
+        override suspend fun getById(id: String): ContentEntity? =
+            items.value.firstOrNull { it.id == id }
+
+        override suspend fun upsert(item: ContentEntity) {
+            items.value = items.value.filterNot { it.id == item.id } + item
+        }
+
+        override suspend fun insertAll(items: List<ContentEntity>) {
+            this.items.value = this.items.value + items
+        }
+
+        override suspend fun deleteById(id: String) {
+            items.value = items.value.filterNot { it.id == id }
+        }
+    }
+
+    private fun receta(id: String) = Recipe(
+        id = id,
+        title = "Receta $id",
+        description = "Descripción $id",
+        category = "Chocolatería",
+        portions = 4,
+        ingredients = listOf("Chocolate"),
+        steps = listOf("Derretir")
+    )
 
     @Test
-    fun entrega_lista_no_vacia() {
-        assertTrue(repository.getContent().isNotEmpty())
+    fun sin_dao_entrega_la_semilla() = runBlocking {
+        val repository = ContentRepository()
+
+        val items = repository.observeAll().first()
+
+        assertTrue(items.isNotEmpty())
+        assertTrue(repository.getById(items.first().id) != null)
     }
 
     @Test
-    fun entrega_al_menos_una_receta_video_y_curso() {
-        val categorias = repository.getContent().map { it.category }.toSet()
-        assertTrue(categorias.contains("Chocolatería"))
-        assertTrue(categorias.contains("Videos técnicos"))
-        assertTrue(categorias.contains("Cursos"))
+    fun con_dao_observa_lo_que_se_guarda() = runBlocking {
+        val repository = ContentRepository(FakeContentDao())
+
+        repository.upsert(receta("r-1"))
+
+        val items: List<Content> = repository.observeAll().first()
+        assertEquals(1, items.size)
+        assertEquals("r-1", items.first().id)
     }
 
     @Test
-    fun busca_por_id_existente() {
-        val primero = repository.getContent().first()
-        assertEquals(primero, repository.getContentById(primero.id))
+    fun upsert_actualiza_si_ya_existe() = runBlocking {
+        val repository = ContentRepository(FakeContentDao())
+        repository.upsert(receta("r-1"))
+
+        repository.upsert(receta("r-1").copy(title = "Título nuevo"))
+
+        val items = repository.observeAll().first()
+        assertEquals(1, items.size)
+        assertEquals("Título nuevo", items.first().title)
     }
 
     @Test
-    fun id_inexistente_retorna_null() {
-        assertEquals(null, repository.getContentById("no-existe"))
+    fun elimina_por_id() = runBlocking {
+        val repository = ContentRepository(FakeContentDao())
+        repository.upsert(receta("r-1"))
+
+        repository.delete("r-1")
+
+        assertTrue(repository.observeAll().first().isEmpty())
     }
 
     @Test
-    fun todos_tienen_id_unico() {
-        val ids = repository.getContent().map { it.id }
-        assertEquals(ids.size, ids.toSet().size)
-        assertNotNull(repository.getContentById(ids.first()))
+    fun get_by_id_inexistente_retorna_null() = runBlocking {
+        val repository = ContentRepository(FakeContentDao())
+
+        assertNull(repository.getById("no-existe"))
     }
 }
