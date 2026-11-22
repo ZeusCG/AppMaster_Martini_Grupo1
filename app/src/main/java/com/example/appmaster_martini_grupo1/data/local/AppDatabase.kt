@@ -16,7 +16,8 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [User::class, Profile::class, Favorite::class, ContentEntity::class, SolicitudContacto::class, ClimaEntity::class],
-    version = 7,
+    // v8: se agregó el índice UNIQUE al email del usuario (H-012).
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -44,13 +45,18 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     .fallbackToDestructiveMigration()
                     .addCallback(object : RoomDatabase.Callback() {
-                        override suspend fun onCreate(connection: SQLiteConnection) {
-                            super.onCreate(connection)
-                            // Se ejecuta cuando la BD se crea por primera vez (o tras migración destructiva).
+                        /**
+                         * H-001: se siembra al ABRIR la BD, no en `onCreate`, porque `onCreate`
+                         * no se ejecuta tras una migración destructiva y el catálogo quedaría vacío.
+                         * Solo siembra si la tabla está vacía; `insertAll` usa REPLACE (idempotente).
+                         */
+                        override suspend fun onOpen(connection: SQLiteConnection) {
+                            super.onOpen(connection)
                             seedScope.launch {
-                                INSTANCE?.contentDao()?.insertAll(
-                                    ContentSeed.items.map { it.toEntity() }
-                                )
+                                val dao = INSTANCE?.contentDao() ?: return@launch
+                                if (dao.getAll().isEmpty()) {
+                                    dao.insertAll(ContentSeed.items.map { it.toEntity() })
+                                }
                             }
                         }
                     })

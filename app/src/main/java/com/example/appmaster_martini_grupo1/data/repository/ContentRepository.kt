@@ -5,13 +5,16 @@ import com.example.appmaster_martini_grupo1.data.local.ContentSeed
 import com.example.appmaster_martini_grupo1.data.local.toContent
 import com.example.appmaster_martini_grupo1.data.local.toEntity
 import com.example.appmaster_martini_grupo1.data.model.Content
+import androidx.room3.RoomDatabase
+import androidx.room3.withWriteTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class ContentRepository(
     private val contentDao: ContentDao? = null,
-    private val favoriteRepository: FavoriteRepository? = null
+    private val favoriteRepository: FavoriteRepository? = null,
+    private val database: RoomDatabase? = null
 ) {
 
     /** true cuando hay BD Room detrás (en la app); false en tests sin DAO. */
@@ -34,9 +37,22 @@ class ContentRepository(
         contentDao?.upsert(content.toEntity())
     }
 
-    /** Elimina el contenido y, de paso, sus favoritos (para no dejar huérfanos). */
+    /**
+     * Elimina el contenido y, de paso, sus favoritos (para no dejar huérfanos).
+     * H-014: si hay BD, las dos escrituras van en una sola transacción (todo o nada).
+     */
     suspend fun delete(id: String) {
-        contentDao?.deleteById(id)
-        favoriteRepository?.removeByContentId(id)
+        val dao = contentDao ?: return
+        val favorites = favoriteRepository
+        val db = database
+        if (db != null && favorites != null) {
+            db.withWriteTransaction {
+                dao.deleteById(id)
+                favorites.removeByContentId(id)
+            }
+        } else {
+            dao.deleteById(id)
+            favorites?.removeByContentId(id)
+        }
     }
 }

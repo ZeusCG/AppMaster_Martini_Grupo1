@@ -67,15 +67,20 @@ class ProfileViewModel(
         _uiState.update { it.copy(userId = userId) }
         val repo = profileRepository ?: return
         viewModelScope.launch {
-            val p = repo.getByUserId(userId) ?: return@launch
-            _uiState.update {
-                it.copy(
-                    displayName = p.displayName,
-                    email = p.email,
-                    phone = p.phone,
-                    photoUri = p.photoUri,
-                    selectedInterests = parseInterests(p.interestsCsv)
-                )
+            // H-035: si falla la lectura, se avisa en vez de cerrar la app.
+            try {
+                val p = repo.getByUserId(userId) ?: return@launch
+                _uiState.update {
+                    it.copy(
+                        displayName = p.displayName,
+                        email = p.email,
+                        phone = p.phone,
+                        photoUri = p.photoUri,
+                        selectedInterests = parseInterests(p.interestsCsv)
+                    )
+                }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(error = "No se pudo cargar el perfil. Intenta nuevamente.") }
             }
         }
     }

@@ -101,7 +101,12 @@ class ContentViewModel(
     fun loadFavorites() {
         val uid = UserSession.userId.value ?: return
         viewModelScope.launch {
-            _favoriteIds.value = favoriteRepository.getFavoriteIds(uid).toSet()
+            // H-035: no dejar que un fallo de la BD cierre la app.
+            try {
+                _favoriteIds.value = favoriteRepository.getFavoriteIds(uid).toSet()
+            } catch (_: Exception) {
+                _favoriteIds.value = emptySet()
+            }
         }
     }
 
@@ -116,8 +121,17 @@ class ContentViewModel(
             _favoriteIds.value - contentId
         }
         viewModelScope.launch {
-            if (nowFavorite) favoriteRepository.add(uid, contentId)
-            else favoriteRepository.remove(uid, contentId)
+            // H-035: si falla la persistencia, se revierte el cambio optimista.
+            try {
+                if (nowFavorite) favoriteRepository.add(uid, contentId)
+                else favoriteRepository.remove(uid, contentId)
+            } catch (_: Exception) {
+                _favoriteIds.value = if (nowFavorite) {
+                    _favoriteIds.value - contentId
+                } else {
+                    _favoriteIds.value + contentId
+                }
+            }
         }
     }
 
@@ -142,7 +156,7 @@ class ContentViewModel(
                 val db = AppDatabase.getInstance(context.applicationContext)
                 val favoriteRepository = FavoriteRepository(db.favoriteDao())
                 ContentViewModel(
-                    repository = ContentRepository(db.contentDao(), favoriteRepository),
+                    repository = ContentRepository(db.contentDao(), favoriteRepository, db),
                     favoriteRepository = favoriteRepository
                 )
             }

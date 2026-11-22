@@ -141,7 +141,14 @@ class ManageContentViewModel(
         }
 
         if (repository.isPersistent) {
-            viewModelScope.launch { repository.upsert(content) }
+            // H-017: esperar la escritura y avisar si falla (antes mostraba "creado" sin persistir).
+            viewModelScope.launch {
+                try {
+                    repository.upsert(content)
+                } catch (_: Exception) {
+                    _uiState.update { it.copy(message = "No se pudo guardar el contenido. Intenta nuevamente.") }
+                }
+            }
         }
     }
 
@@ -150,7 +157,13 @@ class ManageContentViewModel(
         _uiState.update { it.copy(items = allContent, message = "Contenido eliminado") }
 
         if (repository.isPersistent) {
-            viewModelScope.launch { repository.delete(id) }
+            viewModelScope.launch {
+                try {
+                    repository.delete(id)
+                } catch (_: Exception) {
+                    _uiState.update { it.copy(message = "No se pudo eliminar el contenido. Intenta nuevamente.") }
+                }
+            }
         }
     }
 
@@ -165,7 +178,8 @@ class ManageContentViewModel(
                 ManageContentViewModel(
                     repository = ContentRepository(
                         contentDao = db.contentDao(),
-                        favoriteRepository = FavoriteRepository(db.favoriteDao())
+                        favoriteRepository = FavoriteRepository(db.favoriteDao()),
+                        database = db
                     )
                 )
             }

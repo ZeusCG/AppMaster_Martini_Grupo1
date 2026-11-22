@@ -13,7 +13,10 @@ import javax.crypto.spec.PBEKeySpec
 object PasswordHasher {
 
     private const val ALGORITHM = "PBKDF2WithHmacSHA1"
-    private const val ITERATIONS = 10_000
+
+    // H-013: 100.000 iteraciones (antes 10.000, bajo frente a la recomendación actual).
+    // Las iteraciones se guardan dentro del hash, así que los hashes viejos siguen verificando.
+    private const val ITERATIONS = 100_000
     private const val KEY_LENGTH_BITS = 256
     private const val SALT_BYTES = 16
     private const val SEPARATOR = ":"

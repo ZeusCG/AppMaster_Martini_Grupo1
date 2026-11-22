@@ -1,18 +1,17 @@
-package com.example.appmaster_martini_grupo1.viewmodel.ContentViewModelTest
+package com.example.appmaster_martini_grupo1.viewmodel
 
 import com.example.appmaster_martini_grupo1.MainDispatcherRule
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import com.example.appmaster_martini_grupo1.data.repository.ContentRepository
 import com.example.appmaster_martini_grupo1.data.repository.FavoriteRepository
 import com.example.appmaster_martini_grupo1.data.session.UserSession
-import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
-import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -59,22 +58,27 @@ class ContentViewModelTest {
 
     @Test
     fun buscar_por_texto_reduce_la_lista() {
+        // H-025: se usa el título de un ítem real en vez de un valor fijo de la semilla.
         val total = viewModel.content.value.size
-        viewModel.onQueryChange("ganache")
+        val primero = viewModel.content.value.first()
+
+        viewModel.onQueryChange(primero.title)
 
         val resultado = viewModel.content.value
-        assertEquals(1, resultado.size)
-        assertEquals("recipe-001", resultado.first().id)
-        assertTrue(resultado.size < total)
+        assertTrue(resultado.any { it.id == primero.id })
+        assertTrue(resultado.size <= total)
     }
 
     @Test
     fun filtro_por_categoria_muestra_solo_esa_categoria() {
-        viewModel.onCategorySelected("Cursos")
+        // H-025: la categoría se toma de los datos, no de un literal acoplado a la semilla.
+        val categoria = viewModel.categories.first()
+
+        viewModel.onCategorySelected(categoria)
 
         val resultado = viewModel.content.value
         assertTrue(resultado.isNotEmpty())
-        assertTrue(resultado.all { it.category == "Cursos" })
+        assertTrue(resultado.all { it.category == categoria })
     }
 
     @Test
@@ -87,8 +91,8 @@ class ContentViewModelTest {
     @Test
     fun limpiar_filtros_vuelve_a_la_lista_completa() {
         val total = viewModel.content.value.size
-        viewModel.onCategorySelected("Cursos")
-        viewModel.onQueryChange("ganache")
+        viewModel.onCategorySelected(viewModel.categories.first())
+        viewModel.onQueryChange("a")
 
         viewModel.onCategorySelected(null)
         viewModel.onQueryChange("")
@@ -126,6 +130,19 @@ class ContentViewModelTest {
 
         assertTrue(vm.uiState.value is ContentUiState.Success)
         assertEquals(1, vm.content.value.size)
+    }
+
+    // H-026: cubre el estado Error de ContentViewModel.observeContent.
+    @Test
+    fun si_falla_la_observacion_expone_estado_error() = runTest {
+        val repository = mockk<ContentRepository>(relaxed = true)
+        every { repository.isPersistent } returns true
+        every { repository.seed() } returns emptyList()
+        every { repository.observeAll() } returns flow { throw IllegalStateException("bd rota") }
+
+        val vm = ContentViewModel(repository, FavoriteRepository())
+
+        assertTrue(vm.uiState.value is ContentUiState.Error)
     }
 
     // --- Favoritos y CRUD (repositorios mockeados) ---

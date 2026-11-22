@@ -32,7 +32,7 @@ fun ContentEntity.toContent(): Content = when (type) {
         url = url.orEmpty()
     )
 
-    else -> Course(
+    TYPE_COURSE -> Course(
         id = id,
         title = title,
         description = description,
@@ -41,6 +41,9 @@ fun ContentEntity.toContent(): Content = when (type) {
         level = level.orEmpty(),
         lessons = lessons.toItems()
     )
+
+    // H-016: no asumir "Course" ante un tipo desconocido/corrupto; se detecta en vez de ocultarlo.
+    else -> error("Tipo de contenido desconocido: $type")
 }
 
 /** Convierte el modelo de dominio a la fila de Room. */
