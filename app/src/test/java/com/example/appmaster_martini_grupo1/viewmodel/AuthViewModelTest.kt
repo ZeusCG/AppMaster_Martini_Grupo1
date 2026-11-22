@@ -12,6 +12,7 @@ import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -127,5 +128,113 @@ class AuthViewModelTest {
         assertTrue(vm.uiState.value.isLoggedIn)
         coVerify { userRepository.insertWithHash(any(), "hash") }
         coVerify { profileRepository.save(any()) }
+    }
+
+    @Test
+    fun login_sin_repositorio_avisa() {
+        val vm = AuthViewModel()
+        vm.onEmailChange("ana@test.cl")
+        vm.onPasswordChange("Clave123")
+
+        vm.onLoginClick()
+
+        assertNotNull(vm.uiState.value.authError)
+    }
+
+    @Test
+    fun registro_sin_repositorio_avisa() {
+        val vm = AuthViewModel()
+        completaRegistro(vm)
+
+        vm.onRegisterClick()
+
+        assertNotNull(vm.uiState.value.authError)
+    }
+
+    @Test
+    fun login_que_lanza_excepcion_avisa() = runTest {
+        val userRepository = mockk<UserRepository>()
+        coEvery { userRepository.authenticate(any(), any()) } throws RuntimeException("boom")
+        val vm = AuthViewModel(userRepository, mockk<ProfileRepository>(relaxed = true))
+
+        vm.onEmailChange("ana@test.cl")
+        vm.onPasswordChange("Clave123")
+        vm.onLoginClick()
+
+        assertNotNull(vm.uiState.value.authError)
+    }
+
+    @Test
+    fun registro_con_correo_duplicado_avisa() = runTest {
+        val userRepository = mockk<UserRepository>()
+        coEvery { userRepository.hashPassword(any()) } returns "hash"
+        coEvery { userRepository.insertWithHash(any(), any()) } throws
+            RuntimeException("UNIQUE constraint failed: users.email")
+        val vm = AuthViewModel(userRepository, mockk<ProfileRepository>(relaxed = true))
+        completaRegistro(vm)
+
+        vm.onRegisterClick()
+
+        assertEquals("Ese correo ya está registrado", vm.uiState.value.authError)
+    }
+
+    @Test
+    fun registro_que_falla_avisa_generico() = runTest {
+        val userRepository = mockk<UserRepository>()
+        coEvery { userRepository.hashPassword(any()) } returns "hash"
+        coEvery { userRepository.insertWithHash(any(), any()) } throws RuntimeException("otro error")
+        val vm = AuthViewModel(userRepository, mockk<ProfileRepository>(relaxed = true))
+        completaRegistro(vm)
+
+        vm.onRegisterClick()
+
+        assertTrue(vm.uiState.value.authError!!.contains("No se pudo crear"))
+    }
+
+    @Test
+    fun nombre_corto_marca_error_de_nombre() {
+        val vm = AuthViewModel()
+        vm.onNameChange("A")
+        vm.onEmailChange("ana@test.cl")
+        vm.onPasswordChange("Clave123")
+        vm.onConfirmPasswordChange("Clave123")
+
+        vm.onRegisterClick()
+
+        assertNotNull(vm.uiState.value.nameError)
+    }
+
+    @Test
+    fun telefono_y_rut_invalidos_marcan_sus_errores() {
+        val vm = AuthViewModel()
+        completaRegistro(vm)
+        vm.onPhoneChange("123")
+        vm.onRutChange("12345678-4")
+
+        vm.onRegisterClick()
+
+        assertNotNull(vm.uiState.value.phoneError)
+        assertNotNull(vm.uiState.value.rutError)
+    }
+
+    @Test
+    fun clearAuthError_lo_limpia() = runTest {
+        val userRepository = mockk<UserRepository>()
+        coEvery { userRepository.authenticate(any(), any()) } returns null
+        val vm = AuthViewModel(userRepository, mockk<ProfileRepository>(relaxed = true))
+        vm.onEmailChange("ana@test.cl")
+        vm.onPasswordChange("Clave123")
+        vm.onLoginClick()
+
+        vm.clearAuthError()
+
+        assertNull(vm.uiState.value.authError)
+    }
+
+    private fun completaRegistro(vm: AuthViewModel) {
+        vm.onNameChange("Ana")
+        vm.onEmailChange("ana@test.cl")
+        vm.onPasswordChange("Clave123")
+        vm.onConfirmPasswordChange("Clave123")
     }
 }

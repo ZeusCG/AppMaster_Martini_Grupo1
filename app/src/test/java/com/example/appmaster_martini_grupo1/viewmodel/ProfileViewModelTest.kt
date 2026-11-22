@@ -109,4 +109,61 @@ class ProfileViewModelTest {
         coVerify { repository.save(any()) }
         assertEquals("Perfil guardado correctamente", vm.uiState.value.savedMessage)
     }
+
+    @Test
+    fun onPhotoPicked_y_removed_actualizan_la_foto() {
+        viewModel.onPhotoPicked("content://foto.jpg")
+        assertEquals("content://foto.jpg", viewModel.uiState.value.photoUri)
+
+        viewModel.onPhotoRemoved()
+        assertNull(viewModel.uiState.value.photoUri)
+    }
+
+    @Test
+    fun saveProfile_sin_repositorio_avisa() {
+        viewModel.onDisplayNameChange("Ana")
+        viewModel.onEmailChange("ana@test.cl")
+
+        viewModel.saveProfile()
+
+        assertNotNull(viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun loadProfile_con_error_avisa() = runTest {
+        val repository = mockk<ProfileRepository>()
+        coEvery { repository.getByUserId(any()) } throws RuntimeException("boom")
+        val vm = ProfileViewModel(repository)
+
+        vm.loadProfile(1L)
+
+        assertNotNull(vm.uiState.value.error)
+    }
+
+    @Test
+    fun saveProfile_con_error_avisa() = runTest {
+        val repository = mockk<ProfileRepository>()
+        coEvery { repository.save(any()) } throws RuntimeException("boom")
+        val vm = ProfileViewModel(repository)
+        vm.onDisplayNameChange("Ana")
+        vm.onEmailChange("ana@test.cl")
+
+        vm.saveProfile()
+
+        assertNotNull(vm.uiState.value.error)
+    }
+
+    @Test
+    fun loadProfile_carga_los_intereses() = runTest {
+        val repository = mockk<ProfileRepository>()
+        coEvery { repository.getByUserId(1L) } returns Profile(
+            userId = 1L, displayName = "Ana", email = "ana@test.cl",
+            phone = "+56912345678", interestsCsv = "recetas, cursos"
+        )
+        val vm = ProfileViewModel(repository)
+
+        vm.loadProfile(1L)
+
+        assertEquals(setOf("recetas", "cursos"), vm.uiState.value.selectedInterests)
+    }
 }
