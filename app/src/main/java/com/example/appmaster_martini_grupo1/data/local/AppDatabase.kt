@@ -7,6 +7,7 @@ import androidx.room3.RoomDatabase
 import androidx.sqlite.SQLiteConnection
 import com.example.appmaster_martini_grupo1.data.model.Favorite
 import com.example.appmaster_martini_grupo1.data.model.Profile
+import com.example.appmaster_martini_grupo1.data.model.SolicitudContacto
 import com.example.appmaster_martini_grupo1.data.model.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,8 +15,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 @Database(
-    entities = [User::class, Profile::class, Favorite::class, ContentEntity::class],
-    version = 5,
+    entities = [User::class, Profile::class, Favorite::class, ContentEntity::class, SolicitudContacto::class, ClimaEntity::class],
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,6 +25,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun favoriteDao(): FavoriteDao
     abstract fun contentDao(): ContentDao
+    abstract fun solicitudContactoDao(): SolicitudContactoDao
+    abstract fun climaDao(): ClimaDao
 
     companion object {
         @Volatile
