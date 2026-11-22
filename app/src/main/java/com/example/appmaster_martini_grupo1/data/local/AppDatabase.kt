@@ -46,7 +46,6 @@ abstract class AppDatabase : RoomDatabase() {
                     .addCallback(object : RoomDatabase.Callback() {
                         override suspend fun onCreate(connection: SQLiteConnection) {
                             super.onCreate(connection)
-                            // Se ejecuta cuando la BD se crea por primera vez (o tras migración destructiva).
                             seedScope.launch {
                                 INSTANCE?.contentDao()?.insertAll(
                                     ContentSeed.items.map { it.toEntity() }

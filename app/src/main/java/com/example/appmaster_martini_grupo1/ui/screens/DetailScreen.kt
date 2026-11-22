@@ -15,13 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -47,6 +45,8 @@ import com.example.appmaster_martini_grupo1.data.model.Video
 import com.example.appmaster_martini_grupo1.platform.rememberBitmapFromUri
 import com.example.appmaster_martini_grupo1.ui.components.FavoriteButton
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
+import com.example.appmaster_martini_grupo1.ui.components.BackButton
+import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +55,9 @@ fun DetailScreen(
     onBack: () -> Unit,
     viewModel: ContentViewModel = viewModel(factory = ContentViewModel.factory(LocalContext.current))
 ) {
-    val content = remember(contentId) { viewModel.getContentById(contentId) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val content = (uiState as? ContentUiState.Success)?.items?.firstOrNull { it.id == contentId }
+        ?: viewModel.getContentById(contentId)
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.loadFavorites() }
@@ -63,7 +65,6 @@ fun DetailScreen(
     var showCamera by remember { mutableStateOf(false) }
     var capturedPhotoUri by remember { mutableStateOf<String?>(null) }
 
-    // Recurso nativo: cámara a pantalla completa.
     if (showCamera) {
         CameraCaptureScreen(
             onPhotoTaken = { uri ->
@@ -79,13 +80,7 @@ fun DetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Detalle") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        )
-                    ) { Text("Volver") }
+                navigationIcon = { BackButton(onClick = onBack)
                 },
                 actions = {
                     FavoriteButton(

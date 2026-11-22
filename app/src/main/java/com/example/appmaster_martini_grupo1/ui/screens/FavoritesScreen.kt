@@ -7,12 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -26,6 +24,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.appmaster_martini_grupo1.ui.components.ContentCard
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
+import com.example.appmaster_martini_grupo1.ui.components.BackButton
+import androidx.compose.material3.CircularProgressIndicator
+import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +37,7 @@ fun FavoritesScreen(
 ) {
     val content by viewModel.content.collectAsStateWithLifecycle()
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.loadFavorites() }
 
@@ -44,51 +46,73 @@ fun FavoritesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mis favoritos") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSecondary
-                        )
-                    ) { Text("<") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
+                title = { Text("Mis favoritos") }, navigationIcon = {
+                    BackButton(onClick = onBack)
+                }, colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     titleContentColor = MaterialTheme.colorScheme.onSecondary,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSecondary
                 )
             )
-        }
-    ) { innerPadding ->
-        if (favorites.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Aún no tienes favoritos. Marca contenido con el corazón en el catálogo.",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+        }) { innerPadding ->
+        when (val state = uiState) {
+            is ContentUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(favorites, key = { it.id }) { item ->
-                    ContentCard(
-                        content = item,
-                        onClick = { onItemClick(item.id) },
-                        isFavorite = true,
-                        onToggleFavorite = { viewModel.toggleFavorite(item.id) }
+
+            is ContentUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.message,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
                     )
+                }
+            }
+
+            is ContentUiState.Success -> {
+                if (favorites.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Aún no tienes favoritos. Marca contenido con el corazón en el catálogo.",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(favorites, key = { it.id }) { item ->
+                            ContentCard(
+                                content = item,
+                                onClick = { onItemClick(item.id) },
+                                isFavorite = true,
+                                onToggleFavorite = { viewModel.toggleFavorite(item.id) })
+                        }
+                    }
                 }
             }
         }

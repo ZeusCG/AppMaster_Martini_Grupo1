@@ -18,7 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -27,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,12 +37,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmaster_martini_grupo1.ui.components.BackButton
 import com.example.appmaster_martini_grupo1.ui.components.ContentCard
+import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
 import kotlinx.coroutines.delay
 
@@ -54,7 +54,7 @@ fun CatalogScreen(
     onBack: () -> Unit = {},
     viewModel: ContentViewModel = viewModel(factory = ContentViewModel.factory(LocalContext.current))
 ) {
-    val content by viewModel.content.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
@@ -65,11 +65,7 @@ fun CatalogScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Catálogo") },
-                navigationIcon = {
-                    TextButton(
-                        onClick = onBack,
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)) { Text("<")}
-                },
+                navigationIcon = { BackButton(onClick = onBack) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     titleContentColor = MaterialTheme.colorScheme.onSecondary,
@@ -107,30 +103,58 @@ fun CatalogScreen(
                 onSelect = viewModel::onCategorySelected
             )
 
-            if (content.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No encontramos contenido para tu búsqueda")
+            when (val state = uiState) {
+                is ContentUiState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    itemsIndexed(content, key = { _, item -> item.id }) { index, item ->
-                        AnimatedCatalogItem(
-                            index = index,
-                            modifier = Modifier.animateItem()
+
+                is ContentUiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = state.message,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
+                is ContentUiState.Success -> {
+                    if (state.items.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            ContentCard(
-                                content = item,
-                                onClick = { onItemClick(item.id) },
-                                isFavorite = item.id in favoriteIds,
-                                onToggleFavorite = { viewModel.toggleFavorite(item.id) }
-                            )
+                            Text("No encontramos contenido para tu búsqueda")
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            itemsIndexed(state.items, key = { _, item -> item.id }) { index, item ->
+                                AnimatedCatalogItem(
+                                    index = index,
+                                    modifier = Modifier.animateItem()
+                                ) {
+                                    ContentCard(
+                                        content = item,
+                                        onClick = { onItemClick(item.id) },
+                                        isFavorite = item.id in favoriteIds,
+                                        onToggleFavorite = { viewModel.toggleFavorite(item.id) }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -138,6 +162,7 @@ fun CatalogScreen(
         }
     }
 }
+
 @Composable
 private fun AnimatedCatalogItem(
     index: Int,
