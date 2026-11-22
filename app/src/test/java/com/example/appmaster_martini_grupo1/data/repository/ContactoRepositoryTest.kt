@@ -5,6 +5,10 @@ import com.example.appmaster_martini_grupo1.data.model.SolicitudContacto
 import com.example.appmaster_martini_grupo1.data.remote.ContactoApi
 import com.example.appmaster_martini_grupo1.data.remote.ContactoRequest
 import com.example.appmaster_martini_grupo1.data.remote.ContactoResponse
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.match
+import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -110,5 +114,22 @@ class ContactoRepositoryTest {
         repository.delete(id)
 
         assertTrue(repository.getHistory(1L).isEmpty())
+    }
+
+    @Test
+    fun send_marca_enviada_usando_el_api_y_el_dao() = runBlocking {
+        val api = mockk<ContactoApi>()
+        val dao = mockk<SolicitudContactoDao>(relaxed = true)
+        coEvery { dao.insert(any()) } returns 5L
+        coEvery { api.enviar(any()) } returns Response.success(
+            ContactoResponse(id = 101, title = "a", body = "b", userId = 1L)
+        )
+        val repository = ContactoRepository(api, dao)
+
+        val resultado = repository.send(userId = 1L, asunto = "a", mensaje = "b")
+
+        assertEquals(SolicitudContacto.ESTADO_ENVIADA, resultado.estado)
+        coVerify { api.enviar(any()) }
+        coVerify { dao.update(match { it.estado == SolicitudContacto.ESTADO_ENVIADA }) }
     }
 }
