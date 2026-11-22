@@ -12,6 +12,7 @@ import org.junit.runner.Description
  * Reemplaza Dispatchers.Main por un TestDispatcher en los tests unitarios, para que
  * `viewModelScope.launch` corra sin el dispatcher de Android.
  */
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class MainDispatcherRule(
     private val dispatcher: TestDispatcher = UnconfinedTestDispatcher()
 ) : TestWatcher() {

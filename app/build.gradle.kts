@@ -92,13 +92,18 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/R$*.class",
         "**/BuildConfig.*",
         "**/*_Factory.*",
-        "**/*_Impl.*"
+        "**/*_Impl.*",
+        // El objetivo de la rúbrica es la LÓGICA (ViewModel / Repository / domain):
+        "**/ui/**",
+        "**/platform/**",
+        "**/data/local/**",
+        "**/MainActivity*"
     )
     val buildDir = layout.buildDirectory.get().asFile
 
     classDirectories.setFrom(
         files(
-            fileTree("$buildDir/tmp/kotlin-classes/debug") { exclude(excludes) },
+            fileTree("$buildDir/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes") { exclude(excludes) },
             fileTree("$buildDir/intermediates/javac/debug/compileDebugJavaWithJavac/classes") { exclude(excludes) }
         )
     )

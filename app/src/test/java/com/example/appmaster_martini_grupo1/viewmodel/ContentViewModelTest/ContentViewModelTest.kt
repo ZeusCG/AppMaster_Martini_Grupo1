@@ -4,12 +4,18 @@ import com.example.appmaster_martini_grupo1.MainDispatcherRule
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import com.example.appmaster_martini_grupo1.data.repository.ContentRepository
 import com.example.appmaster_martini_grupo1.data.repository.FavoriteRepository
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -20,6 +26,11 @@ class ContentViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    @After
+    fun tearDown() {
+        UserSession.clear()
+    }
 
     private val viewModel = ContentViewModel()
 
@@ -115,5 +126,57 @@ class ContentViewModelTest {
 
         assertTrue(vm.uiState.value is ContentUiState.Success)
         assertEquals(1, vm.content.value.size)
+    }
+
+    // --- Favoritos y CRUD (repositorios mockeados) ---
+
+    @Test
+    fun loadFavorites_carga_los_ids() = runTest {
+        UserSession.set(1L)
+        val favoriteRepository = mockk<FavoriteRepository>()
+        coEvery { favoriteRepository.getFavoriteIds(1L) } returns listOf("recipe-001")
+        val vm = ContentViewModel(ContentRepository(), favoriteRepository)
+
+        vm.loadFavorites()
+
+        assertTrue(vm.favoriteIds.value.contains("recipe-001"))
+    }
+
+    @Test
+    fun toggleFavorite_agrega_y_quita() = runTest {
+        UserSession.set(1L)
+        val favoriteRepository = mockk<FavoriteRepository>(relaxed = true)
+        coEvery { favoriteRepository.add(any(), any()) } just Runs
+        coEvery { favoriteRepository.remove(any(), any()) } just Runs
+        val vm = ContentViewModel(ContentRepository(), favoriteRepository)
+
+        vm.toggleFavorite("x")
+        assertTrue(vm.favoriteIds.value.contains("x"))
+
+        vm.toggleFavorite("x")
+        assertFalse(vm.favoriteIds.value.contains("x"))
+
+        coVerify { favoriteRepository.add(1L, "x") }
+        coVerify { favoriteRepository.remove(1L, "x") }
+    }
+
+    @Test
+    fun saveContent_y_deleteContent_llaman_al_repositorio() = runTest {
+        val repository = mockk<ContentRepository>(relaxed = true)
+        every { repository.isPersistent } returns false
+        every { repository.seed() } returns emptyList()
+        coEvery { repository.upsert(any()) } just Runs
+        coEvery { repository.delete(any()) } just Runs
+        val vm = ContentViewModel(repository, FavoriteRepository())
+        val recipe = Recipe(
+            id = "r-1", title = "t", description = "d", category = "Recetas",
+            portions = 1, ingredients = listOf("a"), steps = listOf("b")
+        )
+
+        vm.saveContent(recipe)
+        vm.deleteContent("r-1")
+
+        coVerify { repository.upsert(any()) }
+        coVerify { repository.delete("r-1") }
     }
 }

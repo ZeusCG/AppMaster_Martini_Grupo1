@@ -12,6 +12,7 @@ import com.example.appmaster_martini_grupo1.data.model.Course
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import com.example.appmaster_martini_grupo1.data.model.Video
 import com.example.appmaster_martini_grupo1.data.repository.ContentRepository
+import com.example.appmaster_martini_grupo1.data.repository.FavoriteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

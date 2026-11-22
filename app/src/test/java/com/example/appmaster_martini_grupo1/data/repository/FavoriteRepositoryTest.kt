@@ -26,6 +26,10 @@ class FavoriteRepositoryTest {
             ids.value = ids.value - contentId
         }
 
+        override suspend fun deleteByContentId(contentId: String) {
+            ids.value = ids.value - contentId
+        }
+
         override fun observeFavoriteIds(userId: Long): Flow<List<String>> = ids
 
         override suspend fun getFavoriteIds(userId: Long): List<String> = ids.value
