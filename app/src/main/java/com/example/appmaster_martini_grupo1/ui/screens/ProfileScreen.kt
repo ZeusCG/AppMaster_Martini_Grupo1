@@ -164,114 +164,217 @@ fun ProfileContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                if (photo != null) {
-                    Image(
-                        bitmap = photo,
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier
-                            .size(88.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = "Sin foto de perfil",
-                        modifier = Modifier.size(88.dp)
-                    )
-                }
-                Column {
-                    Text("Foto de perfil", style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = onPickImage) { Text("Elegir de la galería") }
-                    if (state.photoUri != null) {
-                        TextButton(onClick = onRemovePhoto) { Text("Quitar foto") }
-                    }
-                }
-            }
-
-            if (galleryMessage != null) {
-                Text(text = galleryMessage, color = MaterialTheme.colorScheme.error)
-                TextButton(onClick = onOpenSettings) { Text("Abrir ajustes") }
-            }
-
-            AuthTextField(
-                value = state.displayName,
-                onValueChange = onDisplayNameChange,
-                label = "Nombre",
-                error = state.displayNameError,
-                icon = Icons.Filled.Person
-            )
-            AuthTextField(
-                value = state.email,
-                onValueChange = onEmailChange,
-                label = "Correo electrónico",
-                error = state.emailError,
-                icon = Icons.Filled.Email,
-                keyboardType = KeyboardType.Email
-            )
-            AuthTextField(
-                value = state.phone,
-                onValueChange = onPhoneChange,
-                label = "Teléfono",
-                error = state.phoneError,
-                icon = Icons.Filled.Phone,
-                keyboardType = KeyboardType.Phone
+            ProfilePhotoHeader(
+                photo = photo,
+                hasPhoto = state.photoUri != null,
+                onPickImage = onPickImage,
+                onRemovePhoto = onRemovePhoto
             )
 
-            Text("Mis intereses", style = MaterialTheme.typography.titleMedium)
-            InterestChips(
-                interests = defaultInterests,
-                selectedIds = state.selectedInterests,
-                onToggle = onToggleInterest
+            ProfileGalleryMessage(
+                message = galleryMessage,
+                onOpenSettings = onOpenSettings
             )
 
-            AnimatedVisibility(
-                visible = state.savedMessage != null,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                ConfirmBanner(
-                    message = state.savedMessage.orEmpty(),
-                    icon = Icons.Filled.CheckCircle,
-                    iconContentDescription = "Guardado correctamente",
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+            ProfileFields(
+                state = state,
+                onDisplayNameChange = onDisplayNameChange,
+                onEmailChange = onEmailChange,
+                onPhoneChange = onPhoneChange
+            )
 
-            AnimatedVisibility(
-                visible = state.error != null,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                ConfirmBanner(
-                    message = state.error.orEmpty(),
-                    icon = Icons.Filled.Warning,
-                    iconContentDescription = "Error",
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                )
-            }
+            ProfileInterestsSection(
+                selectedInterests = state.selectedInterests,
+                onToggleInterest = onToggleInterest
+            )
 
-            Button(
-                onClick = onSaveClick,
-                enabled = !state.isSaving,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (state.isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("Guardar cambios")
-                }
+            ProfileMessages(
+                savedMessage = state.savedMessage,
+                error = state.error
+            )
+
+            ProfileSaveButton(
+                isSaving = state.isSaving,
+                onSaveClick = onSaveClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfilePhotoHeader(
+    photo: ImageBitmap?,
+    hasPhoto: Boolean,
+    onPickImage: () -> Unit,
+    onRemovePhoto: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        if (photo != null) {
+            Image(
+                bitmap = photo,
+                contentDescription = "Foto de perfil",
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Filled.Person,
+                contentDescription = "Sin foto de perfil",
+                modifier = Modifier.size(88.dp)
+            )
+        }
+        Column {
+            Text("Foto de perfil", style = MaterialTheme.typography.titleMedium)
+            TextButton(onClick = onPickImage) { Text("Elegir de la galería") }
+            if (hasPhoto) {
+                TextButton(onClick = onRemovePhoto) { Text("Quitar foto") }
             }
+        }
+    }
+}
+
+@Composable
+private fun ProfileGalleryMessage(
+    message: String?,
+    onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (message == null) return
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(text = message, color = MaterialTheme.colorScheme.error)
+        TextButton(onClick = onOpenSettings) { Text("Abrir ajustes") }
+    }
+}
+
+@Composable
+private fun ProfileFields(
+    state: ProfileUiState,
+    onDisplayNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        AuthTextField(
+            value = state.displayName,
+            onValueChange = onDisplayNameChange,
+            label = "Nombre",
+            error = state.displayNameError,
+            icon = Icons.Filled.Person
+        )
+        AuthTextField(
+            value = state.email,
+            onValueChange = onEmailChange,
+            label = "Correo electrónico",
+            error = state.emailError,
+            icon = Icons.Filled.Email,
+            keyboardType = KeyboardType.Email
+        )
+        AuthTextField(
+            value = state.phone,
+            onValueChange = onPhoneChange,
+            label = "Teléfono",
+            error = state.phoneError,
+            icon = Icons.Filled.Phone,
+            keyboardType = KeyboardType.Phone
+        )
+    }
+}
+
+@Composable
+private fun ProfileInterestsSection(
+    selectedInterests: Set<String>,
+    onToggleInterest: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("Mis intereses", style = MaterialTheme.typography.titleMedium)
+        InterestChips(
+            interests = defaultInterests,
+            selectedIds = selectedInterests,
+            onToggle = onToggleInterest
+        )
+    }
+}
+
+@Composable
+private fun ProfileMessages(
+    savedMessage: String?,
+    error: String?
+) {
+    ProfileMessage(
+        message = savedMessage,
+        icon = Icons.Filled.CheckCircle,
+        iconContentDescription = "Guardado correctamente",
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+    )
+    ProfileMessage(
+        message = error,
+        icon = Icons.Filled.Warning,
+        iconContentDescription = "Error",
+        containerColor = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer
+    )
+}
+
+@Composable
+private fun ProfileMessage(
+    message: String?,
+    icon: ImageVector,
+    iconContentDescription: String,
+    containerColor: Color,
+    contentColor: Color
+) {
+    AnimatedVisibility(
+        visible = message != null,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically()
+    ) {
+        ConfirmBanner(
+            message = message.orEmpty(),
+            icon = icon,
+            iconContentDescription = iconContentDescription,
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
+    }
+}
+
+@Composable
+private fun ProfileSaveButton(
+    isSaving: Boolean,
+    onSaveClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onSaveClick,
+        enabled = !isSaving,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        if (isSaving) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        } else {
+            Text("Guardar cambios")
         }
     }
 }
