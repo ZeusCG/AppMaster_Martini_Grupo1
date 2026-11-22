@@ -1,5 +1,8 @@
 *.iml
 .gradle
+
+# Credenciales de firma: NO se suben. La llave release/appmaster.jks SI se sube.
+keystore.properties
 /local.properties
 /.idea/caches
 /.idea/libraries
