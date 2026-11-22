@@ -10,7 +10,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 class ContentRepository(
-    private val contentDao: ContentDao? = null
+    private val contentDao: ContentDao? = null,
+    private val favoriteRepository: FavoriteRepository? = null
 ) {
 
     /** true cuando hay BD Room detrás (en la app); false en tests sin DAO. */
@@ -33,7 +34,9 @@ class ContentRepository(
         contentDao?.upsert(content.toEntity())
     }
 
+    /** Elimina el contenido y, de paso, sus favoritos (para no dejar huérfanos). */
     suspend fun delete(id: String) {
         contentDao?.deleteById(id)
+        favoriteRepository?.removeByContentId(id)
     }
 }

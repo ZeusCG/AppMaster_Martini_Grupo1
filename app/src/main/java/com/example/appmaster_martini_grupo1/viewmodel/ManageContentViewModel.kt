@@ -161,7 +161,12 @@ class ManageContentViewModel(
         fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val db = AppDatabase.getInstance(context.applicationContext)
-                ManageContentViewModel(repository = ContentRepository(db.contentDao()))
+                ManageContentViewModel(
+                    repository = ContentRepository(
+                        contentDao = db.contentDao(),
+                        favoriteRepository = FavoriteRepository(db.favoriteDao())
+                    )
+                )
             }
         }
     }

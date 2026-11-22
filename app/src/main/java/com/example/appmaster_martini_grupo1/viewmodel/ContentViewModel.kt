@@ -131,6 +131,8 @@ class ContentViewModel(
 
     /** Elimina contenido por id (lo usará la pantalla de gestión, D1.3). */
     fun deleteContent(id: String) {
+        // Quita el favorito en memoria para que no quede "colgado" en la UI.
+        _favoriteIds.value = _favoriteIds.value - id
         viewModelScope.launch { repository.delete(id) }
     }
 
@@ -138,9 +140,10 @@ class ContentViewModel(
         fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val db = AppDatabase.getInstance(context.applicationContext)
+                val favoriteRepository = FavoriteRepository(db.favoriteDao())
                 ContentViewModel(
-                    repository = ContentRepository(db.contentDao()),
-                    favoriteRepository = FavoriteRepository(db.favoriteDao())
+                    repository = ContentRepository(db.contentDao(), favoriteRepository),
+                    favoriteRepository = favoriteRepository
                 )
             }
         }
