@@ -114,9 +114,7 @@ fun AppNavGraph(
                 onGoLogin = { navController.navigate(Routes.LOGIN) },
                 onLogout = {
                     UserSession.clear()
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = true }
-                    }
+                    navController.navigate(Routes.LOGIN)
                 }
             )
         }

@@ -5,12 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
@@ -39,7 +38,6 @@ import com.example.appmaster_martini_grupo1.ui.components.AuthTextField
 import com.example.appmaster_martini_grupo1.viewmodel.ContactoViewModel
 import com.example.appmaster_martini_grupo1.viewmodel.SendState
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactScreen(
     onBack: () -> Unit = {},
@@ -51,82 +49,93 @@ fun ContactScreen(
     Scaffold(
         topBar = { AppTopBar(title = "Contactar a un asesor", onBack = onBack) }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Escríbenos y te contactamos", style = MaterialTheme.typography.titleMedium)
-
-            if (userId == null) {
-                Text(
-                    "Inicia sesión para enviar una solicitud y ver tu historial.",
-                    color = MaterialTheme.colorScheme.error
-                )
+            item {
+                Text("Escríbenos y te contactamos", style = MaterialTheme.typography.titleMedium)
             }
 
-            AuthTextField(
-                value = state.form.subject,
-                onValueChange = viewModel::onSubjectChange,
-                label = "Asunto",
-                error = state.form.subjectError,
-                icon = Icons.Filled.Email
-            )
-            OutlinedTextField(
-                value = state.form.message,
-                onValueChange = viewModel::onMessageChange,
-                label = { Text("Mensaje") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 4,
-                isError = state.form.messageError != null,
-                supportingText = if (state.form.messageError != null) {
-                    { Text(state.form.messageError.orEmpty()) }
-                } else null
-            )
-
-            Button(
-                onClick = viewModel::send,
-                enabled = state.sendState != SendState.Sending,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (state.sendState == SendState.Sending) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+            if (userId == null) {
+                item {
+                    Text(
+                        "Inicia sesión para enviar una solicitud y ver tu historial.",
+                        color = MaterialTheme.colorScheme.error
                     )
-                } else {
-                    Text("Enviar solicitud")
                 }
             }
 
-            when (val send = state.sendState) {
-                SendState.Sent -> Text(
-                    "Solicitud enviada. ¡Gracias por escribirnos!",
-                    color = MaterialTheme.colorScheme.primary
+            item {
+                AuthTextField(
+                    value = state.form.subject,
+                    onValueChange = viewModel::onSubjectChange,
+                    label = "Asunto",
+                    error = state.form.subjectError,
+                    icon = Icons.Filled.Email
                 )
-
-                is SendState.Error -> Text(send.mensaje, color = MaterialTheme.colorScheme.error)
-                SendState.Idle, SendState.Sending -> Unit
             }
 
-            Text("Historial de solicitudes", style = MaterialTheme.typography.titleMedium)
+            item {
+                OutlinedTextField(
+                    value = state.form.message,
+                    onValueChange = viewModel::onMessageChange,
+                    label = { Text("Mensaje") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    isError = state.form.messageError != null,
+                    supportingText = if (state.form.messageError != null) {
+                        { Text(state.form.messageError.orEmpty()) }
+                    } else null
+                )
+            }
+
+            item {
+                Button(
+                    onClick = viewModel::send,
+                    enabled = state.sendState != SendState.Sending,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (state.sendState == SendState.Sending) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Enviar solicitud")
+                    }
+                }
+            }
+
+            item {
+                when (val send = state.sendState) {
+                    SendState.Sent -> Text(
+                        "Solicitud enviada. ¡Gracias por escribirnos!",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    is SendState.Error -> Text(send.mensaje, color = MaterialTheme.colorScheme.error)
+                    SendState.Idle, SendState.Sending -> Unit
+                }
+            }
+
+            item {
+                Text("Historial de solicitudes", style = MaterialTheme.typography.titleMedium)
+            }
 
             if (state.history.isEmpty()) {
-                Text("Aún no has enviado solicitudes.")
+                item {
+                    Text("Aún no has enviado solicitudes.")
+                }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.history, key = { it.id }) { solicitud ->
-                        ContactHistoryRow(
-                            solicitud = solicitud,
-                            onDelete = { viewModel.deleteRequest(solicitud.id) }
-                        )
-                    }
+                items(state.history, key = { it.id }) { solicitud ->
+                    ContactHistoryRow(
+                        solicitud = solicitud,
+                        onDelete = { viewModel.deleteRequest(solicitud.id) }
+                    )
                 }
             }
         }

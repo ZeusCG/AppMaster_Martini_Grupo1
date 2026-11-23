@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -43,6 +44,11 @@ import com.example.appmaster_martini_grupo1.ui.components.ContentCard
 import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
 import kotlinx.coroutines.delay
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
+import com.example.appmaster_martini_grupo1.data.session.UserSession
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,17 +61,22 @@ fun CatalogScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val selectedCategory by viewModel.selectedCategory.collectAsStateWithLifecycle()
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
+    val userId by UserSession.userId.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) { viewModel.loadFavorites() }
+    LaunchedEffect(Unit) { viewModel.observeFavorites() }
 
     Scaffold(
-        topBar = { AppTopBar(title = "Catálogo", onBack = onBack) }
+        topBar = { AppTopBar(title = "Catálogo", onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .imePadding()
         ) {
             OutlinedTextField(
                 value = query,
@@ -112,7 +123,15 @@ fun CatalogScreen(
                                         content = item,
                                         onClick = { onItemClick(item.id) },
                                         isFavorite = item.id in favoriteIds,
-                                        onToggleFavorite = { viewModel.toggleFavorite(item.id) }
+                                        onToggleFavorite = {
+                                            if (userId == null) {
+                                                scope.launch {
+                                                    snackbarHostState.showSnackbar("Debes iniciar sesión para guardar favoritos")
+                                                }
+                                            } else {
+                                                viewModel.toggleFavorite(item.id)
+                                            }
+                                        }
                                     )
                                 }
                             }

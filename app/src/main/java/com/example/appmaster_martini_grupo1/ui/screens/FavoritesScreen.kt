@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 import com.example.appmaster_martini_grupo1.ui.components.ContentCard
 import com.example.appmaster_martini_grupo1.viewmodel.ContentUiState
@@ -37,7 +38,7 @@ fun FavoritesScreen(
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) { viewModel.loadFavorites() }
+    LaunchedEffect(Unit) { viewModel.observeFavorites() }
 
     val favorites = content.filter { it.id in favoriteIds }
 
@@ -51,7 +52,11 @@ fun FavoritesScreen(
                 if (favorites.isEmpty()) {
                     CenteredMessage(innerPadding) {
                         Text(
-                            text = "Aún no tienes favoritos. Marca contenido con el corazón en el catálogo.",
+                            text = if (UserSession.userId.value == null) {
+                                "Inicia sesión para guardar y ver tus favoritos."
+                            } else {
+                                "Aún no tienes favoritos. Marca contenido con el corazón en el catálogo."
+                            },
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
