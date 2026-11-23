@@ -1,5 +1,9 @@
 package com.example.appmaster_martini_grupo1.ui.screens
 
+import android.net.Uri
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
@@ -19,12 +23,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,10 +47,12 @@ import com.example.appmaster_martini_grupo1.data.model.Content
 import com.example.appmaster_martini_grupo1.data.model.Course
 import com.example.appmaster_martini_grupo1.data.model.Recipe
 import com.example.appmaster_martini_grupo1.data.model.Video
+import com.example.appmaster_martini_grupo1.data.session.UserSession
 import com.example.appmaster_martini_grupo1.platform.rememberBitmapFromUri
 import com.example.appmaster_martini_grupo1.ui.components.AppTopBar
 import com.example.appmaster_martini_grupo1.ui.components.FavoriteButton
 import com.example.appmaster_martini_grupo1.viewmodel.ContentViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,16 +65,33 @@ fun DetailScreen(
     val content = items.firstOrNull { it.id == contentId }
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) { viewModel.loadFavorites() }
+    val userId by UserSession.userId.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
+    LaunchedEffect(Unit) { viewModel.observeFavorites() }
+
+    val photoFile = remember(contentId) {
+        val nombreSeguro = contentId.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        File(File(context.filesDir, "content_photos"), "$nombreSeguro.jpg")
+    }
+    var capturedPhotoUri by remember(contentId) {
+        mutableStateOf(
+            if (photoFile.exists()) Uri.fromFile(photoFile).toString() else null
+        )
+    }
     var showCamera by remember { mutableStateOf(false) }
-    var capturedPhotoUri by remember { mutableStateOf<String?>(null) }
 
     if (showCamera) {
         CameraCaptureScreen(
             onPhotoTaken = { uri ->
-                capturedPhotoUri = uri
-                showCamera = false
+                scope.launch {
+                    capturedPhotoUri = withContext(Dispatchers.IO) {
+                        guardarFotoEnAlmacen(context, uri, photoFile)
+                    }
+                    showCamera = false
+                }
             },
             onClose = { showCamera = false }
         )
@@ -80,12 +106,23 @@ fun DetailScreen(
                 actions = {
                     FavoriteButton(
                         isFavorite = contentId in favoriteIds,
-                        onToggle = { viewModel.toggleFavorite(contentId) },
+                        onToggle = {
+                            if (userId == null) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Debes iniciar sesión para guardar favoritos"
+                                    )
+                                }
+                            } else {
+                                viewModel.toggleFavorite(contentId)
+                            }
+                        },
                         inactiveColor = MaterialTheme.colorScheme.onSecondary
                     )
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         if (content == null) {
             Column(
@@ -218,4 +255,19 @@ private fun SectionTitle(text: String) {
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold
     )
+}
+
+
+private fun guardarFotoEnAlmacen(
+    context: android.content.Context,
+    origen: String,
+    destino: File
+): String {
+    return runCatching {
+        destino.parentFile?.mkdirs()
+        context.contentResolver.openInputStream(Uri.parse(origen))?.use { input ->
+            destino.outputStream().use { output -> input.copyTo(output) }
+        }
+        Uri.fromFile(destino).toString()
+    }.getOrDefault(origen)
 }

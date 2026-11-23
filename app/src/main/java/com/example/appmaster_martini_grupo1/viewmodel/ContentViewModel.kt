@@ -8,13 +8,19 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.appmaster_martini_grupo1.data.local.AppDatabase
 import com.example.appmaster_martini_grupo1.data.model.Content
+import com.example.appmaster_martini_grupo1.data.model.Course
+import com.example.appmaster_martini_grupo1.data.model.Recipe
+import com.example.appmaster_martini_grupo1.data.model.Video
 import com.example.appmaster_martini_grupo1.data.repository.ContentRepository
 import com.example.appmaster_martini_grupo1.data.repository.FavoriteRepository
 import com.example.appmaster_martini_grupo1.data.session.UserSession
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.text.Normalizer
 
 sealed interface ContentUiState {
     data object Loading : ContentUiState
@@ -46,6 +52,8 @@ class ContentViewModel(
 
     private val _favoriteIds = MutableStateFlow<Set<String>>(emptySet())
     val favoriteIds: StateFlow<Set<String>> = _favoriteIds.asStateFlow()
+
+    private var favoritesJob: Job? = null
 
     init {
         applyFilters()
@@ -81,12 +89,13 @@ class ContentViewModel(
     }
 
     private fun applyFilters() {
-        val text = _query.value.trim().lowercase()
+        val words = _query.value.trim().normalizeForSearch()
+            .split(WHITESPACE)
+            .filter { it.isNotEmpty() }
         val category = _selectedCategory.value
         val filtered = allContent.filter { item ->
-            val matchesText = text.isEmpty() ||
-                    item.title.lowercase().contains(text) ||
-                    item.description.lowercase().contains(text)
+            val searchable = item.searchText()
+            val matchesText = words.isEmpty() || words.all { searchable.contains(it) }
             val matchesCategory = category == null || item.category == category
             matchesText && matchesCategory
         }
@@ -103,6 +112,25 @@ class ContentViewModel(
                 _favoriteIds.value = favoriteRepository.getFavoriteIds(uid).toSet()
             } catch (_: Exception) {
                 _favoriteIds.value = emptySet()
+            }
+        }
+    }
+
+    fun observeFavorites() {
+        favoritesJob?.cancel()
+        favoritesJob = viewModelScope.launch {
+            UserSession.userId.collectLatest { uid ->
+                if (uid == null) {
+                    _favoriteIds.value = emptySet()
+                    return@collectLatest
+                }
+                try {
+                    favoriteRepository.observeFavoriteIds(uid).collect { ids ->
+                        _favoriteIds.value = ids.toSet()
+                    }
+                } catch (_: Exception) {
+                    _favoriteIds.value = emptySet()
+                }
             }
         }
     }
@@ -154,4 +182,20 @@ class ContentViewModel(
             }
         }
     }
+}
+
+private val DIACRITICS = Regex("\\p{M}+")
+private val WHITESPACE = Regex("\\s+")
+
+private fun String.normalizeForSearch(): String =
+    Normalizer.normalize(lowercase(), Normalizer.Form.NFD).replace(DIACRITICS, "")
+
+private fun Content.searchText(): String {
+    val extra = when (this) {
+        is Recipe -> "receta " + (ingredients + steps).joinToString(" ")
+        is Video -> "video $url $durationMinutes minutos"
+        is Course -> "curso $level ${lessons.joinToString(" ")} $durationHours horas"
+        else -> ""
+    }
+    return "$title $description $category $extra".normalizeForSearch()
 }
